@@ -12,8 +12,6 @@ To install the plugin, follow these instructions.
 
         composer require thepixelage/craft-fragments
 
-    Note: You may be prompted to enter your Bitbucket credentials.
-
 2. Install the plugin by running this command in the CLI:
 
-        ./craft plugin/install page-fragments
+        ./craft plugin/install fragments
