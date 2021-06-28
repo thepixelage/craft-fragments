@@ -1,0 +1,7 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Zones'|t('fragments') %}
+{% set selectedSubnavItem = 'zones' %}
+
+{% block actionButton %}
+    <a href="{{ cpUrl('contentfragments/zones/new') }}" class="btn submit add icon">{{ 'New Zone'|t('contentfragments') }}</a>
+{% endblock %}

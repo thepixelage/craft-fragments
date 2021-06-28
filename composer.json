@@ -1,0 +1,34 @@
+{
+    "name": "thepixelage/craft-fragments",
+    "description": "Fragments plugin",
+    "type": "craft-plugin",
+    "version": "1.0.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "craft-fragments"
+    ],
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "ThePixelAge",
+            "homepage": "https://www.thepixelage.com"
+        }
+    ],
+    "require": {
+    },
+    "autoload": {
+        "psr-4": {
+          "thepixelage\\fragments\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Fragments",
+        "handle": "fragments",
+        "developer": "ThePixelAge",
+        "developerUrl": "https://www.thepixelage.com",
+        "class": "thepixelage\\fragments\\Plugin"
+    }
+}

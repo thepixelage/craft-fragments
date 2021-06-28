@@ -1,0 +1,20 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Fragments'|t('fragments') %}
+{% set selectedSubnavItem = 'fragments' %}
+
+{% block actionButton %}
+    <div class="btngroup">
+        <a href="{{ cpUrl('contentfragments/fragments/new') }}" class="btn submit add icon">{{ 'New Fragment'|t('contentfragments') }}</a>
+        <button type="button" class="btn submit menubtn"></button>
+        <div class="menu">
+            <ul>
+                <li><a>{{ 'Logos'|t('app') }}</a></li>
+                <li><a>{{ 'Text'|t('app') }}</a></li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block sidebar %}
+    x
+{% endblock %}

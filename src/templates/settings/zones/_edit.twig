@@ -1,0 +1,74 @@
+{% extends '_layouts/cp' %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Create a new zone' %}
+{% if zone is defined and zone %}
+    {% set title = zone.name %}
+{% endif %}
+
+{% set selectedSubnavItem = 'settings' %}
+
+{% set crumbs = [
+    {
+        label: 'Fragments'|t('fragments'),
+        url: url('fragments'),
+    },
+    {
+        label: 'Settings'|t('fragments'),
+        url: url('fragments/settings'),
+    },
+    {
+        label: 'Zones'|t('fragments'),
+        url: url('fragments/settings/zones'),
+    },
+] %}
+
+{% set fullPageForm = true %}
+{% set formActions = [
+    zone ?? false ? {
+        label: 'Delete'|t('app'),
+        action: 'fragments/zones/delete-zone',
+        redirect: 'fragments/settings/zones'|hash,
+        destructive: true,
+        confirm: 'Are you sure you want to delete “{name}”?'|t('app', {
+            name: zone.name,
+        }),
+    },
+]|filter %}
+
+{% block content %}
+    {{ actionInput('fragments/zones/save-zone') }}
+    {{ redirectInput('fragments/settings/zones') }}
+    {% if zone is defined and zone %}
+        {{ hiddenInput('id', zone.id) }}
+    {% endif %}
+
+    {{ forms.textField({
+        first: true,
+        label: "Name"|t('app'),
+        instructions: "What this zone will be called in the control panel."|t('app'),
+        id: 'name',
+        name: 'name',
+        value: zone is defined ? zone.name,
+        errors: [],
+        autofocus: true,
+        required: true
+    }) }}
+
+    {{ forms.textField({
+        label: "Handle"|t('app'),
+        instructions: "How you’ll refer to this zone in the templates."|t('app'),
+        id: 'handle',
+        name: 'handle',
+        class: 'code',
+        autocorrect: false,
+        autocapitalize: false,
+        value: zone is defined ? zone.handle,
+        errors: [],
+        required: true
+    }) }}
+{% endblock %}
+
+{% if zone is not defined or zone.handle is empty %}
+    {% js "new Craft.HandleGenerator('#name', '#handle');" %}
+{% endif %}
