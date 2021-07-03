@@ -1,0 +1,88 @@
+{#{% extends '_layouts/cp' %}#}
+{#{% import '_includes/forms' as forms %}#}
+
+{#{% set title = 'Create a new fragment' %}#}
+{#{% if fragment is defined and fragment %}#}
+{#    {% set title = fragment.title %}#}
+{#{% endif %}#}
+{#{% set selectedSubnavItem = 'fragments' %}#}
+
+{#{% set form = fragment.getFieldLayout().createForm(fragment) %}#}
+{#{% set fullPageForm = true %}#}
+
+{#{% if tabs is not defined %}#}
+{#    {% set tabs = form.getTabMenu() %}#}
+{#{% endif %}#}
+
+{#{% set formActions = [] %}#}
+
+{#{% block actionButton %}#}
+{#    <div id="save-btn-container" class="btngroup submit">#}
+{#        <button type="submit" class="btn submit">{{ 'Save'|t('app') }}</button>#}
+{#    </div>#}
+{#{% endblock %}#}
+
+{#{% block content %}#}
+{#    <div id="fields">#}
+{#        {{ form.render()|raw }}#}
+{#    </div>#}
+{#{% endblock %}#}
+
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set fullPageForm = true %}
+{% set saveShortcutRedirect = continueEditingUrl %}
+{% set retainScrollOnSaveShortcut = true %}
+{% do view.setIsDeltaRegistrationActive(true) %}
+
+{% set fragmentTypeHandle = fragmentType.handle %}
+{% set isNewFragment = fragment.id ? false : true %}
+
+{% block header %}
+    <div class="flex flex-nowrap">
+        {{ block('pageTitle') }}
+        {{ block('contextMenu') }}
+    </div>
+    <div class="flex">
+        {#
+        {% if showPreviewBtn or shareUrl is defined %}
+            <div class="btngroup">
+                {% if showPreviewBtn %}
+                    <button type="button" class="btn livepreviewbtn" data-icon="view">{{ "Preview"|t('app') }}</button>
+                {% endif %}
+                {% if shareUrl is defined %}
+                    <a href="{{ shareUrl }}" class="btn sharebtn" data-icon="share" rel="noopener" target="_blank">{{ 'View'|t('app') }}</a>
+                {% endif %}
+            </div>
+        {% endif %}
+        #}
+        {{ block('actionButton') }}
+    </div>
+{% endblock %}
+
+{% block contextMenu %}
+    {% if craft.app.getIsMultiSite() %}
+        {% set parentIdParam = craft.app.request.getParam('parentId.0') ?: craft.app.request.getParam('parentId') %}
+        {% set urlFormat = url("categories/#{groupHandle}/#{craft.app.request.getSegment(3)}/{handle}", (parentIdParam ? { parentId: parentIdParam })) %}
+        {% include "_elements/sitemenu" with {
+            siteIds: siteIds,
+            selectedSiteId: category.siteId,
+            urlFormat: urlFormat
+        } only %}
+    {% endif %}
+{% endblock %}
+
+
+{% block content %}
+    {{ actionInput('categories/save-category') }}
+    {{ redirectInput('categories/'~fragmentTypeHandle) }}
+
+    {{ hiddenInput('fragmentTypeId', fragmentType.id) }}
+    {% if fragment.id %}{{ hiddenInput('fragmentId', fragment.id) }}{% endif %}
+    {% if craft.app.getIsMultiSite() %}{{ hiddenInput('siteId', fragment.siteId) }}{% endif %}
+
+    <div id="fields">
+        {{ fieldsHtml|raw }}
+    </div>
+{% endblock %}

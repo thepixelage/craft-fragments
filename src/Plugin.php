@@ -4,10 +4,13 @@ namespace thepixelage\fragments;
 
 
 use Craft;
+use craft\events\DefineFieldLayoutFieldsEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\fieldlayoutelements\TitleField;
 use craft\helpers\UrlHelper;
+use craft\models\FieldLayout;
 use craft\services\Elements;
 use craft\web\twig\variables\Cp;
 use craft\web\twig\variables\CraftVariable;
@@ -44,6 +47,8 @@ class Plugin extends \craft\base\Plugin
 
         $this->_registerComponents();
         $this->_registerEventListeners();
+        $this->_registerCpNavListener();
+        $this->_registerFieldLayoutListener();
         $this->_registerProjectConfigChangeListeners();
         $this->_registerCpRoutes();
         $this->_registerVariables();
@@ -72,7 +77,10 @@ class Plugin extends \craft\base\Plugin
                 $event->types[] = Fragment::class;
             }
         );
+    }
 
+    private function _registerCpNavListener()
+    {
         Event::on(
             Cp::class,
             Cp::EVENT_REGISTER_CP_NAV_ITEMS,
@@ -87,6 +95,14 @@ class Plugin extends \craft\base\Plugin
                     ],
                 ];
 
+                if (count($this->fragmentTypes->getAllFragmentTypes()) == 0) {
+                    unset($fragmentNavItems['subnav']['fragments']);
+                }
+
+                if (count($this->zones->getAllZones()) == 0) {
+                    unset($fragmentNavItems['subnav']['zones']);
+                }
+
                 if (Craft::$app->config->general->allowAdminChanges) {
                     $fragmentNavItems['subnav']['settings'] = ['label' => 'Settings', 'url' => 'settings/plugins/fragments'];
                 }
@@ -95,6 +111,19 @@ class Plugin extends \craft\base\Plugin
             }
         );
     }
+
+    private function _registerFieldLayoutListener()
+    {
+        Event::on(FieldLayout::class, FieldLayout::EVENT_DEFINE_STANDARD_FIELDS, function(DefineFieldLayoutFieldsEvent $event) {
+            /* @var FieldLayout $fieldLayout */
+            $fieldLayout = $event->sender;
+
+            if ($fieldLayout->type == Fragment::class) {
+                $event->fields[] = TitleField::class;
+            }
+        });
+    }
+
 
     private function _registerProjectConfigChangeListeners()
     {

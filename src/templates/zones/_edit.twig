@@ -1,32 +1,25 @@
-{% requireAdmin %}
-{% extends 'fragments/_layouts/settings' %}
+{% extends '_layouts/cp' %}
 
 {% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
 
-{% set title = 'Fragments Settings'|t('fragments') %}
-{% set selectedSubnavItem = 'settings' %}
-{% set selectedSettingsNavItem = 'zones' %}
+{% set title = 'Zones'|t('fragments') %}
+{% set selectedSubnavItem = 'zones' %}
 
 {% set zones = craft.fragments.getAllZones() %}
+
+{% block sidebar %}
+    {% include 'fragments/_includes/zonesnav.twig' with { zones: zones, selectedZoneHandle: handle } %}
+{% endblock %}
 
 {% block content %}
     <div id="zones-vue-admin-table"></div>
 
     <div class="buttons">
-        <a href="{{ url('fragments/settings/zones/new') }}" class="btn submit add icon">{{ "New zone"|t('app') }}</a>
+        <a href="{{ cpUrl("fragments/zones/#{handle}/add") }}" class="btn submit add icon">{{ "Add fragment to zone"|t('app') }}</a>
     </div>
 {% endblock %}
 
 {% set tableData = [] %}
-{% for zone in zones %}
-    {% set tableData = tableData|merge([{
-        id: zone.id,
-        title: zone.name|t('site'),
-        url: url('fragments/settings/zones/' ~ zone.id),
-        name: zone.name|t('site')|e,
-        handle: zone.handle,
-    }]) %}
-{% endfor %}
 
 {% js %}
     var columns = [
@@ -38,7 +31,7 @@
         columns: columns,
         container: '#zones-vue-admin-table',
         deleteAction: 'fragments/zones/delete-zone',
-        emptyMessage: Craft.t('app', 'No zones exist yet.'),
+        emptyMessage: Craft.t('app', 'No fragments added to this zone yet.'),
         tableData: {{ tableData|json_encode|raw }}
     });
 {% endjs %}

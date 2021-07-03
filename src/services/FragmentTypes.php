@@ -5,13 +5,13 @@ namespace thepixelage\fragments\services;
 use Craft;
 use craft\base\Component;
 use craft\db\Query;
-use craft\elements\Entry;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
 use craft\helpers\StringHelper;
 use craft\models\FieldLayout;
 use Exception;
 use thepixelage\fragments\db\Table;
+use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\records\FragmentType as FragmentTypeRecord;
 use Throwable;
@@ -44,6 +44,15 @@ class FragmentTypes extends Component
     {
         $result = $this->_createFragmentTypesQuery()
             ->where(['uid' => $uid])
+            ->one();
+
+        return $result ? new FragmentType($result) : null;
+    }
+
+    public function getFragmentTypeByHandle($handle)
+    {
+        $result = $this->_createFragmentTypesQuery()
+            ->where(['handle' => $handle])
             ->one();
 
         return $result ? new FragmentType($result) : null;
@@ -131,7 +140,7 @@ class FragmentTypes extends Component
             if (!empty($data['fieldLayouts'])) {
                 $layout = FieldLayout::createFromConfig(reset($data['fieldLayouts']));
                 $layout->id = $typeRecord->fieldLayoutId;
-                $layout->type = Entry::class;
+                $layout->type = Fragment::class;
                 $layout->uid = key($data['fieldLayouts']);
                 Craft::$app->getFields()->saveLayout($layout);
                 $typeRecord->fieldLayoutId = $layout->id;

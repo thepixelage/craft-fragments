@@ -1,0 +1,12 @@
+<nav>
+    <ul>
+        {% for zone in zones %}
+            <li>
+                <a href="{{ cpUrl("fragments/zones/#{zone.handle}") }}"
+                   class="{{ selectedZoneHandle is defined and selectedZoneHandle == zone.handle ? 'sel' : '' }}">
+                    {{ zone.name }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</nav>

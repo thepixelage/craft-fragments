@@ -1,8 +1,14 @@
 <?php
 
 return [
-    'fragments/settings/fragmenttypes/new' => 'fragments/fragment-types/create',
-    'fragments/settings/fragmenttypes/<id:\d+>' => 'fragments/fragment-types/update',
-    'fragments/settings/zones/new' => 'fragments/zones/create',
-    'fragments/settings/zones/<id:\d+>' => 'fragments/zones/update',
+    'fragments/settings' => 'fragments/fragments/settings-index',
+    'fragments/settings/types' => 'fragments/fragment-types/index',
+    'fragments/settings/types/new' => 'fragments/fragment-types/edit',
+    'fragments/settings/types/<typeId:\d+>' => 'fragments/fragment-types/edit',
+    'fragments/settings/zones' => 'fragments/zones/index',
+    'fragments/settings/zones/new' => 'fragments/zones/edit',
+    'fragments/settings/zones/<zoneId:\d+>' => 'fragments/zones/edit',
+
+    'fragments' => 'fragments/fragments/fragment-index',
+    'fragments/<fragmentTypeHandle:{handle}>' => 'fragments/fragment-index',
 ];

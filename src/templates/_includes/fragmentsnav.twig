@@ -1,0 +1,12 @@
+<nav>
+    <ul>
+        {% for fragmentType in fragmentTypes %}
+            <li>
+                <a href="{{ cpUrl("fragments/fragments/#{fragmentType.handle}") }}"
+                   class="{{ selectedFragmentTypeHandle == fragmentType.handle ? 'sel' : '' }}">
+                    {{ fragmentType.name }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</nav>

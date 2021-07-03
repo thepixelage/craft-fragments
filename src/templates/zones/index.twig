@@ -1,7 +1,6 @@
-{% extends '_layouts/cp' %}
-{% set title = 'Zones'|t('fragments') %}
-{% set selectedSubnavItem = 'zones' %}
+{% set zones = craft.fragments.getAllZones() %}
+{% if zones|length > 0 %}
+    {% redirect "fragments/zones/#{zones[0].handle}" %}
+{% endif %}
 
-{% block actionButton %}
-    <a href="{{ cpUrl('contentfragments/zones/new') }}" class="btn submit add icon">{{ 'New Zone'|t('contentfragments') }}</a>
-{% endblock %}
+{% redirect 'fragments/settings/zones' %}

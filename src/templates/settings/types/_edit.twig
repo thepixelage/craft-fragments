@@ -1,7 +1,7 @@
 {% extends "_layouts/cp" %}
 
 {% set selectedSubnavItem = 'settings' %}
-{% set selectedSettingsNavItem = 'zones' %}
+{% set selectedSettingsNavItem = 'fragmenttypes' %}
 
 {% set fullPageForm = true %}
 
@@ -11,39 +11,45 @@
 
 
 {% block content %}
-    {{ actionInput('fragments/zones/save') }}
-    {{ redirectInput('fragments/settings/zones') }}
+    {{ actionInput('fragments/fragment-types/save') }}
+    {{ redirectInput('fragments/settings/types') }}
 
-    {% if zone.id %}{{ hiddenInput('zoneId', zone.id) }}{% endif %}
+    {% if fragmentType.id %}{{ hiddenInput('typeId', fragmentType.id) }}{% endif %}
 
     {{ forms.textField({
         first: true,
         label: "Name"|t('app'),
-        instructions: "What this zone will be called in the control panel."|t('app'),
+        instructions: "What this fragment type will be called in the control panel."|t('app'),
         id: 'name',
         name: 'name',
-        value: zone.name,
-        errors: zone.getErrors('name'),
+        value: fragmentType.name,
+        errors: fragmentType.getErrors('name'),
         autofocus: true,
         required: true,
     }) }}
 
     {{ forms.textField({
         label: "Handle"|t('app'),
-        instructions: "How you’ll refer to this zone in the templates."|t('app'),
+        instructions: "How you’ll refer to this fragment type in the templates."|t('app'),
         id: 'handle',
         name: 'handle',
         class: 'code',
         autocorrect: false,
         autocapitalize: false,
-        value: zone.handle,
-        errors: zone.getErrors('handle'),
+        value: fragmentType.handle,
+        errors: fragmentType.getErrors('handle'),
         required: true
+    }) }}
+
+    <hr>
+
+    {{ forms.fieldLayoutDesignerField({
+        fieldLayout: fragmentType.getFieldLayout(),
     }) }}
 {% endblock %}
 
 
-{% if brandNewZone %}
+{% if brandNewType %}
     {% js %}
         new Craft.HandleGenerator('#name', '#handle');
     {% endjs %}
