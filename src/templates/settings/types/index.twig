@@ -1,0 +1,16 @@
+{% extends '_layouts/cp.html' %}
+{% set title = 'Settings'|t('fragments') %}
+{% set selectedSubnavItem = 'settings' %}
+
+{% set crumbs = [
+    {
+        label: 'Fragments'|t('fragments'),
+        url: cpUrl('fragments'),
+    },
+] %}
+
+{% block sidebar %}
+    {{ include('@fragments/_components/sidebar/settings.twig', {
+        selectedSidebarNavItem: 'types'
+    }) }}
+{% endblock %}

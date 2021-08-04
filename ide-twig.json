@@ -1,0 +1,8 @@
+{
+    "namespaces": [
+        {
+            "namespace": "fragments",
+            "path": "src/templates"
+        }
+    ]
+}
