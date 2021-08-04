@@ -44,7 +44,7 @@
     new Craft.VueAdminTable({
         columns: columns,
         container: '#zones-vue-admin-table',
-        deleteAction: 'fragments/zones/delete-zone',
+        deleteAction: 'fragments/zones/delete',
         emptyMessage: Craft.t('app', 'No zones exist yet.'),
         tableData: {{ tableData|json_encode|raw }}
     });

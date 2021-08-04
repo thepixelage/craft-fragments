@@ -11,6 +11,7 @@ use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 use yii\web\ServerErrorHttpException;
 
@@ -70,13 +71,12 @@ class ZonesController extends Controller
 
         /** @noinspection PhpUnhandledExceptionInspection */
         if (!Plugin::getInstance()->zones->saveZone($zone)) {
-            if ($this->request->acceptsJson) {
+            if ($this->request->getAcceptsJson()) {
                 return $this->asJson(['errors' => $zone->getErrors()]);
             }
 
             $this->setFailFlash(Craft::t('fragments', "Couldn’t save zone."));
 
-            // Send the event back to the edit action
             Craft::$app->urlManager->setRouteParams([
                 'zone' => $zone,
             ]);
@@ -84,7 +84,7 @@ class ZonesController extends Controller
             return null;
         }
 
-        if ($this->request->acceptsJson) {
+        if ($this->request->getAcceptsJson()) {
             return $this->asJson(['success' => true]);
         }
 
@@ -92,5 +92,23 @@ class ZonesController extends Controller
         $this->redirectToPostedUrl($zone);
 
         return null;
+    }
+
+    /**
+     * @throws ForbiddenHttpException
+     * @throws BadRequestHttpException
+     */
+    public function actionDelete(): Response
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+        $this->requireAdmin();
+
+        $zonesService = Plugin::getInstance()->zones;
+        $zoneId = $this->request->getRequiredBodyParam('id');
+        $zone = $zonesService->getZoneById($zoneId);
+        $zonesService->deleteZone($zone);
+
+        return $this->asJson(['success' => true]);
     }
 }

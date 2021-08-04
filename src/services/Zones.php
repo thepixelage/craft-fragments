@@ -37,6 +37,15 @@ class Zones extends Component
         return $result ? new Zone($result) : null;
     }
 
+    public function getZoneByUid($uid): ?Zone
+    {
+        $result = $this->createZonesQuery()
+            ->where(['uid' => $uid])
+            ->one();
+
+        return $result ? new Zone($result) : null;
+    }
+
     public function getZoneCount(): int
     {
         return $this->createZonesQuery()->count();
@@ -77,6 +86,25 @@ class Zones extends Component
         return true;
     }
 
+    public function deleteZone(Zone $zone): bool
+    {
+        $path = "fragmentZones.$zone->uid";
+        Craft::$app->projectConfig->remove($path);
+
+        return true;
+    }
+
+    public function deleteZoneById($id): bool
+    {
+        $zone = $this->getZoneById($id);
+
+        if (!$zone) {
+            return false;
+        }
+
+        return $this->deleteZone($zone);
+    }
+
     /**
      * @throws \yii\db\Exception
      */
@@ -108,6 +136,22 @@ class Zones extends Component
                 ], ['id' => $id])
                 ->execute();
         }
+    }
+
+    /**
+     * @throws \yii\db\Exception
+     */
+    public function handleDeletedZone(ConfigEvent $event)
+    {
+        $uid = $event->tokenMatches[0];
+        $zone = $this->getZoneByUid($uid);
+        if (!$zone) {
+            return;
+        }
+
+        Craft::$app->db->createCommand()
+            ->delete(Table::ZONES, ['id' => $zone->id])
+            ->execute();
     }
 
     private function createZonesQuery(): Query
