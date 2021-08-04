@@ -1,0 +1,53 @@
+{% extends '@fragments/_layouts/base.twig' %}
+
+{% import '_includes/forms' as forms %}
+
+{% set title = "Edit Zone"|t('fragments') %}
+
+{% set crumbs = [
+    {
+        label: "Settings"|t('fragments'),
+        url: cpUrl('fragments/settings'),
+    },
+    {
+        label: "Zones"|t('fragments'),
+        url: cpUrl('fragments/settings/zones'),
+    },
+] %}
+
+{% set fullPageForm = true %}
+
+{% block content %}
+
+    {{ actionInput('fragments/zones/save') }}
+
+    {{ redirectInput('fragments/settings/zones') }}
+
+    {% if zone.id %}{{ hiddenInput('zoneId', zone.id) }}{% endif %}
+
+    {{ forms.textField({
+        first: true,
+        label: "Name"|t('app'),
+        instructions: "What this zone will be called in the control panel."|t('app'),
+        id: 'name',
+        name: 'name',
+        value: zone.name,
+        errors: zone.getErrors('name'),
+        autofocus: true,
+        required: true,
+    }) }}
+
+    {{ forms.textField({
+        label: "Handle"|t('app'),
+        instructions: "How you’ll refer to this zone in the templates."|t('app'),
+        id: 'handle',
+        name: 'handle',
+        class: 'code',
+        autocorrect: false,
+        autocapitalize: false,
+        value: zone.handle,
+        errors: zone.getErrors('handle'),
+        required: true
+    }) }}
+
+{% endblock %}

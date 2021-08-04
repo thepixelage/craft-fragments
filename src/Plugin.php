@@ -21,12 +21,13 @@ use yii\base\Event;
  *
  * @package thepixelage\fragments
  *
- * @property FragmentTypes $types
+ * @property FragmentTypes $fragmentTypes
+ * @property-read mixed $settingsResponse
  * @property Zones $zones
  */
 class Plugin extends \craft\base\Plugin
 {
-    public static $plugin;
+    public static Plugin $plugin;
 
     public $schemaVersion = '1.0.0';
     public $hasCpSettings = true;
@@ -43,6 +44,7 @@ class Plugin extends \craft\base\Plugin
         $this->registerTemplateRoot();
         $this->registerCpRoutes();
         $this->registerCpNavItems();
+        $this->registerProjectConfigChangeListeners();
     }
 
     public function getSettingsResponse()
@@ -55,7 +57,7 @@ class Plugin extends \craft\base\Plugin
     private function registerServices()
     {
         $this->setComponents([
-            'types' => FragmentTypes::class,
+            'fragmentTypes' => FragmentTypes::class,
             'zones' => Zones::class,
         ]);
     }
@@ -104,7 +106,7 @@ class Plugin extends \craft\base\Plugin
                     ],
                 ];
 
-                if ($this->types->getFragmentTypeCount() == 0) {
+                if ($this->fragmentTypes->getFragmentTypeCount() == 0) {
                     unset($fragmentNavItems['subnav']['fragments']);
                 }
 
@@ -119,5 +121,16 @@ class Plugin extends \craft\base\Plugin
                 $event->navItems[] = $fragmentNavItems;
             }
         );
+    }
+
+    private function registerProjectConfigChangeListeners()
+    {
+        Craft::$app->projectConfig
+            ->onAdd('fragmentZones.{uid}', [$this->zones, 'handleChangedZone'])
+            ->onUpdate('fragmentZones.{uid}', [$this->zones, 'handleChangedZone'])
+            ->onRemove('fragmentZones.{uid}', [$this->zones, 'handleDeletedZone'])
+            ->onAdd('fragmentTypes.{uid}', [$this->fragmentTypes, 'handleChangedFragmentType'])
+            ->onUpdate('fragmentTypes.{uid}', [$this->fragmentTypes, 'handleChangedFragmentType'])
+            ->onRemove('fragmentTypes.{uid}', [$this->fragmentTypes, 'handleDeletedFragmentType']);
     }
 }

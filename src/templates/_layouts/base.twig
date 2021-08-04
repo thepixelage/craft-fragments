@@ -2,7 +2,7 @@
 
 {% set crumbs = [
     {
-        label: 'Fragments'|t('fragments'),
+        label: "Fragments"|t('fragments'),
         url: cpUrl('fragments'),
     },
-] %}
+]|merge((crumbs is defined ? crumbs : [])) %}
