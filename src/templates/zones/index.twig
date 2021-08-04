@@ -1,6 +1,0 @@
-{% set zones = craft.fragments.getAllZones() %}
-{% if zones|length > 0 %}
-    {% redirect "fragments/zones/#{zones[0].handle}" %}
-{% endif %}
-
-{% redirect 'fragments/settings/zones' %}
