@@ -33,7 +33,7 @@ class ZonesController extends Controller
             if ($zoneId) {
                 $zone = Plugin::getInstance()->zones->getZoneById($zoneId);
                 if (!$zone) {
-                    throw new BadRequestHttpException("Invalid event ID: $zoneId");
+                    throw new BadRequestHttpException("Invalid zone ID: $zoneId");
                 }
             } else {
                 $zone = new Zone();
@@ -60,7 +60,7 @@ class ZonesController extends Controller
         if ($zoneId) {
             $zone = Plugin::getInstance()->zones->getZoneById($zoneId);
             if (!$zone) {
-                throw new BadRequestHttpException("Invalid event ID: $zoneId");
+                throw new BadRequestHttpException("Invalid zone ID: $zoneId");
             }
         } else {
             $zone = new Zone();

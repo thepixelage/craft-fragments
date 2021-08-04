@@ -44,7 +44,7 @@
     new Craft.VueAdminTable({
         columns: columns,
         container: '#fragmenttypes-vue-admin-table',
-        deleteAction: 'fragments/fragmenttypes/delete-fragment-type',
+        deleteAction: 'fragments/fragment-types/delete',
         emptyMessage: Craft.t('app', 'No fragment types exist yet.'),
         tableData: {{ tableData|json_encode|raw }}
     });
