@@ -1,13 +1,7 @@
-{% extends '_layouts/cp.html' %}
+{% extends '@fragments/_layouts/base.twig' %}
+
 {% set title = 'Settings'|t('fragments') %}
 {% set selectedSubnavItem = 'settings' %}
-
-{% set crumbs = [
-    {
-        label: 'Fragments'|t('fragments'),
-        url: cpUrl('fragments'),
-    },
-] %}
 
 {% block sidebar %}
     {{ include('@fragments/_components/sidebar/settings.twig', {

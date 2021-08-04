@@ -1,10 +1,4 @@
-{% extends '_layouts/cp.html' %}
+{% extends '@fragments/_layouts/base.twig' %}
+
 {% set title = 'Fragments'|t('fragments') %}
 {% set selectedSubnavItem = 'fragments' %}
-
-{% set crumbs = [
-    {
-        label: 'Fragments'|t('fragments'),
-        url: cpUrl('fragments'),
-    },
-] %}

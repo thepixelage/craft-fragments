@@ -2,10 +2,14 @@
 <nav>
     <ul>
         <li>
-            <a href="{{ cpUrl('fragments/settings/types') }}" class="{{ selectedSidebarNavItem == 'types' ? 'sel' : '' }}">Fragment Types</a>
+            <a href="{{ cpUrl('fragments/settings/types') }}" class="{{ selectedSidebarNavItem == 'types' ? 'sel' : '' }}">
+                {{ 'Fragment Types'|t('fragments') }}
+            </a>
         </li>
         <li>
-            <a href="{{ cpUrl('fragments/settings/zones') }}" class="{{ selectedSidebarNavItem == 'zones' ? 'sel' : '' }}">Zones</a>
+            <a href="{{ cpUrl('fragments/settings/zones') }}" class="{{ selectedSidebarNavItem == 'zones' ? 'sel' : '' }}">
+                {{ 'Zones'|t('fragments') }}
+            </a>
         </li>
     </ul>
 </nav>
