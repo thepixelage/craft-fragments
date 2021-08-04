@@ -42,6 +42,7 @@ class FragmentTypesController extends Controller
 
         return $this->renderTemplate('@fragments/settings/fragmenttypes/_edit.twig', [
             'fragmentType' => $fragmentType,
+            'isNew' => ($fragmentType->id == null),
         ]);
     }
 
@@ -58,7 +59,7 @@ class FragmentTypesController extends Controller
         $fragmentTypeId = $this->request->getBodyParam('fragmentTypeId');
 
         if ($fragmentTypeId) {
-            $fragmentType = Plugin::getInstance()->zones->getZoneById($fragmentTypeId);
+            $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
             if (!$fragmentType) {
                 throw new BadRequestHttpException("Invalid fragment type ID: $fragmentTypeId");
             }

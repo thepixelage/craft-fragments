@@ -3,7 +3,7 @@
 return [
     'fragments/settings/fragmenttypes' => 'fragments/fragment-types/index',
     'fragments/settings/fragmenttypes/new' => 'fragments/fragment-types/edit',
-    'fragments/settings/fragmenttypes/<typeId:\d+>' => 'fragments/fragment-types/edit',
+    'fragments/settings/fragmenttypes/<fragmentTypeId:\d+>' => 'fragments/fragment-types/edit',
     'fragments/settings/zones' => 'fragments/zones/index',
     'fragments/settings/zones/new' => 'fragments/zones/edit',
     'fragments/settings/zones/<zoneId:\d+>' => 'fragments/zones/edit',

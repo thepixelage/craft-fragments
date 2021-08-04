@@ -10,4 +10,11 @@ class Zone extends Model
     public ?string $name = null;
     public ?string $handle = null;
     public ?string $uid = null;
+
+    public function rules(): array
+    {
+        return [
+            [['name', 'handle'], 'required']
+        ];
+    }
 }

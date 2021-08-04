@@ -51,3 +51,9 @@
     }) }}
 
 {% endblock %}
+
+{% if isNew %}
+    {% js %}
+        new Craft.HandleGenerator('#name', '#handle');
+    {% endjs %}
+{% endif %}

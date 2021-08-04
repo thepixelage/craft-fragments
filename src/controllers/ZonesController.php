@@ -42,6 +42,7 @@ class ZonesController extends Controller
 
         return $this->renderTemplate('@fragments/settings/zones/_edit.twig', [
             'zone' => $zone,
+            'isNew' => ($zone->id == null),
         ]);
     }
 
