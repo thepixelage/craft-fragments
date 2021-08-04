@@ -1,4 +1,13 @@
-{% extends '@fragments/_layouts/base.twig' %}
+{% if craft.fragments.types.getFragmentTypeCount() > 0 %}
 
-{% set title = 'Fragments'|t('fragments') %}
-{% set selectedSubnavItem = 'fragments' %}
+    {% redirect cpUrl('fragments/fragments') %}
+
+{% endif %}
+
+{% if craft.fragments.zones.getZoneCount() > 0 %}
+
+    {% redirect cpUrl('fragments/zones') %}
+
+{% endif %}
+
+{% redirect cpUrl('fragments/settings') %}

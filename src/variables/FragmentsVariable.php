@@ -8,9 +8,9 @@ use thepixelage\fragments\services\Zones;
 
 class FragmentsVariable
 {
-    public function getFragmentTypes(): FragmentTypes
+    public function getTypes(): FragmentTypes
     {
-        return Plugin::getInstance()->fragmentTypes;
+        return Plugin::getInstance()->types;
     }
 
     public function getZones(): Zones

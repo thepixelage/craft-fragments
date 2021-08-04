@@ -5,11 +5,15 @@ namespace thepixelage\fragments;
 use Craft;
 use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterTemplateRootsEvent;
+use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
 use craft\web\twig\variables\Cp;
+use craft\web\twig\variables\CraftVariable;
+use craft\web\UrlManager;
 use craft\web\View;
 use thepixelage\fragments\services\FragmentTypes;
 use thepixelage\fragments\services\Zones;
+use thepixelage\fragments\variables\FragmentsVariable;
 use yii\base\Event;
 
 /**
@@ -17,7 +21,7 @@ use yii\base\Event;
  *
  * @package thepixelage\fragments
  *
- * @property FragmentTypes $fragmentTypes
+ * @property FragmentTypes $types
  * @property Zones $zones
  */
 class Plugin extends \craft\base\Plugin
@@ -35,7 +39,9 @@ class Plugin extends \craft\base\Plugin
         self::$plugin = $this;
 
         $this->registerServices();
+        $this->registerVariables();
         $this->registerTemplateRoot();
+        $this->registerCpRoutes();
         $this->registerCpNavItems();
     }
 
@@ -49,9 +55,25 @@ class Plugin extends \craft\base\Plugin
     private function registerServices()
     {
         $this->setComponents([
-            'fragmentTypes' => FragmentTypes::class,
+            'types' => FragmentTypes::class,
             'zones' => Zones::class,
         ]);
+    }
+
+    private function registerVariables()
+    {
+        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function(Event $e) {
+            $variable = $e->sender;
+            $variable->set('fragments', FragmentsVariable::class);
+        });
+    }
+
+    private function registerCpRoutes()
+    {
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
+            $rules = include __DIR__ . '/config/routes.php';
+            $event->rules = array_merge($event->rules, $rules);
+        });
     }
 
     private function registerTemplateRoot()
@@ -82,7 +104,7 @@ class Plugin extends \craft\base\Plugin
                     ],
                 ];
 
-                if ($this->fragmentTypes->getFragmentTypeCount() == 0) {
+                if ($this->types->getFragmentTypeCount() == 0) {
                     unset($fragmentNavItems['subnav']['fragments']);
                 }
 

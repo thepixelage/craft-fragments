@@ -1,0 +1,10 @@
+{% extends '@fragments/_layouts/base.twig' %}
+
+{% set title = "Settings"|t('fragments') %}
+{% set selectedSubnavItem = 'settings' %}
+
+{% block sidebar %}
+    {{ include('@fragments/_includes/sidebar/settings.twig', {
+        selectedSidebarNavItem: selectedSidebarNavItem
+    }) }}
+{% endblock %}
