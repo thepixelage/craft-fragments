@@ -51,9 +51,7 @@
     }) }}
 
     {{ forms.fieldLayoutDesignerField({
-        fieldLayout: craft.app.fields.getLayoutByType(
-            'thepixelage\\fragments\\models\\FragmentType'
-        ),
+        fieldLayout: fragmentType.getFieldLayout(),
     }) }}
 
 {% endblock %}

@@ -4,6 +4,7 @@ namespace thepixelage\fragments\controllers;
 
 use Craft;
 use craft\web\Controller;
+use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\Plugin;
 use yii\base\ErrorException;
@@ -26,9 +27,12 @@ class FragmentTypesController extends Controller
 
     /**
      * @throws BadRequestHttpException
+     * @throws ForbiddenHttpException
      */
     public function actionEdit(?int $fragmentTypeId = null, ?FragmentType $fragmentType = null): Response
     {
+        $this->requireAdmin();
+
         if (!$fragmentType) {
             if ($fragmentTypeId) {
                 $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
@@ -70,6 +74,10 @@ class FragmentTypesController extends Controller
         $fragmentType->name = $this->request->getBodyParam('name');
         $fragmentType->handle = $this->request->getBodyParam('handle');
 
+        $fieldLayout = Craft::$app->getFields()->assembleLayoutFromPost();
+        $fieldLayout->type = Fragment::class;
+        $fragmentType->setFieldLayout($fieldLayout);
+
         /** @noinspection PhpUnhandledExceptionInspection */
         if (!Plugin::getInstance()->fragmentTypes->saveFragmentType($fragmentType)) {
             if ($this->request->getAcceptsJson()) {
@@ -84,6 +92,8 @@ class FragmentTypesController extends Controller
 
             return null;
         }
+
+        Craft::$app->fields->saveLayout($fieldLayout);
 
         if ($this->request->getAcceptsJson()) {
             return $this->asJson(['success' => true]);
