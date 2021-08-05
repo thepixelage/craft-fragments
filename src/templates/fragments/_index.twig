@@ -1,2 +1,10 @@
-{% extends '@fragments/_layouts/base.twig' %}
+{% extends '_layouts/elementindex.html' %}
+{% set elementType = 'thepixelage\\fragments\\elements\\Fragment' %}
 {% set title = "Fragments"|t('fragments') %}
+
+{% set crumbs = [
+    {
+        'label': "Fragments"|t('fragments'),
+        'url': cpUrl('fragments'),
+    }
+] %}

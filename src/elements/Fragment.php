@@ -2,11 +2,16 @@
 
 namespace thepixelage\fragments\elements;
 
+use Craft;
 use craft\base\Element;
+use craft\elements\db\ElementQueryInterface;
 use craft\models\FieldLayout;
+use thepixelage\fragments\db\Table;
+use thepixelage\fragments\elements\db\FragmentQuery;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\Plugin;
 use yii\base\InvalidConfigException;
+use yii\db\Exception;
 
 /**
  *
@@ -14,7 +19,47 @@ use yii\base\InvalidConfigException;
  */
 class Fragment extends Element
 {
-    public string $fragmentTypeId;
+    public ?int $fragmentTypeId;
+
+    public static function displayName(): string
+    {
+        return Craft::t('app', "Fragment");
+    }
+
+    public static function pluralDisplayName(): string
+    {
+        return Craft::t('app', "Fragments");
+    }
+
+    public static function find(): ElementQueryInterface
+    {
+        return new FragmentQuery(static::class);
+    }
+
+    public static function hasContent(): bool
+    {
+        return true;
+    }
+
+    public static function hasTitles(): bool
+    {
+        return true;
+    }
+
+    public static function isLocalized(): bool
+    {
+        return true;
+    }
+
+    public function getSourceId(): ?int
+    {
+        return $this->fragmentTypeId;
+    }
+
+    public function getIsEditable(): bool
+    {
+        return true;
+    }
 
     /**
      * @throws InvalidConfigException
@@ -40,5 +85,85 @@ class Fragment extends Element
         }
 
         return $type;
+    }
+
+    public function getCpEditUrl(): string
+    {
+        return 'fragments/fragments/' . $this->id;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function afterSave(bool $isNew)
+    {
+        if ($isNew) {
+            Craft::$app->db->createCommand()
+                ->insert(Table::FRAGMENTS, [
+                    'id' => $this->id,
+                    'typeId' => 0,
+                ])
+                ->execute();
+        } else {
+            Craft::$app->db->createCommand()
+                ->update(Table::FRAGMENTS, [
+                    'typeId' => 0,
+                ], ['id' => $this->id])
+                ->execute();
+        }
+
+        parent::afterSave($isNew);
+    }
+
+    protected static function defineSources(string $context = null): array
+    {
+        $fragmentTypes = Plugin::getInstance()->fragmentTypes->getAllFragmentTypes();
+
+        return array_map(function ($fragmentType) {
+            return [
+                'key' => 'type:' . $fragmentType['uid'],
+                'label' => Craft::t('site', $fragmentType['name']),
+                'data' => ['handle' => $fragmentType['handle']],
+                'criteria' => ['typeId' => $fragmentType['id']],
+            ];
+        }, $fragmentTypes);
+    }
+
+    protected static function defineSortOptions(): array
+    {
+        return [
+            'title' => Craft::t('app', "Title"),
+            'slug' => Craft::t('app', "Slug"),
+            [
+                'label' => Craft::t('app', "Date Updated"),
+                'orderBy' => 'elements.dateUpdated',
+                'attribute' => 'dateUpdated',
+                'defaultDir' => 'desc',
+            ],
+            [
+                'label' => Craft::t('app', "ID"),
+                'orderBy' => 'elements.id',
+                'attribute' => 'id',
+            ],
+        ];
+    }
+
+    protected static function defineTableAttributes(): array
+    {
+        return [
+            'title' => ['label' => Craft::t('app', "Title")],
+            'slug' => ['label' => Craft::t('app', "Slug")],
+            'id' => ['label' => Craft::t('app', "ID")],
+            'uid' => ['label' => Craft::t('app', "UID")],
+            'dateCreated' => ['label' => Craft::t('app', "Date Created")],
+            'dateUpdated' => ['label' => Craft::t('app', "Date Updated")],
+        ];
+    }
+
+    protected static function defineDefaultTableAttributes(string $source): array
+    {
+        return [
+            'slug'
+        ];
     }
 }

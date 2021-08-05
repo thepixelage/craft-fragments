@@ -1,0 +1,38 @@
+{% extends '_layouts/element.html' %}
+
+{% import '_includes/forms' as forms %}
+
+{% set title = "Edit Fragment"|t('fragments') %}
+
+{% set redirectUrl = "fragments/fragments/#{fragmentType.handle}" %}
+{% set canUpdateSource = true %}
+{% set saveSourceAction = 'fragments/fragments/save' %}
+{% set deleteSourceAction = 'fragments/fragments/delete' %}
+
+{% block content %}
+    {{ parent() }}
+{% endblock %}
+
+{% block settings %}
+    {{ forms.textField({
+        label: "Slug"|t('app'),
+        siteId: element.siteId,
+        id: 'slug',
+        name: 'slug',
+        autocorrect: false,
+        autocapitalize: false,
+        value: element.slug,
+        placeholder: "Enter slug"|t('app'),
+        errors: (element.getErrors('slug')|merge(element.getErrors('uri')))
+    }) }}
+
+    {{ parent() }}
+{% endblock %}
+
+{% if not element.slug %}
+    {% js %}
+        window.slugGenerator = new Craft.SlugGenerator('#title', '#slug', {
+            charMap: {{ craft.cp.getAsciiCharMap(element.site.language)|json_encode|raw }}
+        });
+    {% endjs %}
+{% endif %}

@@ -50,6 +50,15 @@ class FragmentTypes extends Component
         return $result ? new FragmentType($result) : null;
     }
 
+    public function getFragmentTypeByHandle($handle): ?FragmentType
+    {
+        $result = $this->createFragmentTypesQuery()
+            ->where(['handle' => $handle])
+            ->one();
+
+        return $result ? new FragmentType($result) : null;
+    }
+
     public function getFragmentTypeCount(): int
     {
         return $this->createFragmentTypesQuery()->count();

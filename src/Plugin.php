@@ -3,14 +3,20 @@
 namespace thepixelage\fragments;
 
 use Craft;
+use craft\events\DefineFieldLayoutFieldsEvent;
+use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\fieldlayoutelements\TitleField;
 use craft\helpers\UrlHelper;
+use craft\models\FieldLayout;
+use craft\services\Elements;
 use craft\web\twig\variables\Cp;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
+use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\services\FragmentTypes;
 use thepixelage\fragments\services\Zones;
 use thepixelage\fragments\variables\FragmentsVariable;
@@ -40,11 +46,13 @@ class Plugin extends \craft\base\Plugin
         self::$plugin = $this;
 
         $this->registerServices();
+        $this->registerElementTypes();
         $this->registerVariables();
         $this->registerTemplateRoot();
         $this->registerCpRoutes();
         $this->registerCpNavItems();
         $this->registerProjectConfigChangeListeners();
+        $this->registerFieldLayoutStandardFields();
     }
 
     public function getSettingsResponse()
@@ -60,6 +68,16 @@ class Plugin extends \craft\base\Plugin
             'fragmentTypes' => FragmentTypes::class,
             'zones' => Zones::class,
         ]);
+    }
+
+    private function registerElementTypes()
+    {
+        Event::on(Elements::class,
+            Elements::EVENT_REGISTER_ELEMENT_TYPES,
+            function(RegisterComponentTypesEvent $event) {
+                $event->types[] = Fragment::class;
+            }
+        );
     }
 
     private function registerVariables()
@@ -132,5 +150,17 @@ class Plugin extends \craft\base\Plugin
             ->onAdd('fragmentTypes.{uid}', [$this->fragmentTypes, 'handleChangedFragmentType'])
             ->onUpdate('fragmentTypes.{uid}', [$this->fragmentTypes, 'handleChangedFragmentType'])
             ->onRemove('fragmentTypes.{uid}', [$this->fragmentTypes, 'handleDeletedFragmentType']);
+    }
+
+    private function registerFieldLayoutStandardFields()
+    {
+        Event::on(FieldLayout::class, FieldLayout::EVENT_DEFINE_STANDARD_FIELDS, function(DefineFieldLayoutFieldsEvent $event) {
+            /* @var FieldLayout $fieldLayout */
+            $fieldLayout = $event->sender;
+
+            if ($fieldLayout->type == Fragment::class) {
+                $event->fields[] = TitleField::class;
+            }
+        });
     }
 }
