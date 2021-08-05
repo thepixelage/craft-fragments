@@ -50,6 +50,12 @@
         required: true
     }) }}
 
+    {{ forms.fieldLayoutDesignerField({
+        fieldLayout: craft.app.fields.getLayoutByType(
+            'thepixelage\\fragments\\models\\FragmentType'
+        ),
+    }) }}
+
 {% endblock %}
 
 {% if isNew %}

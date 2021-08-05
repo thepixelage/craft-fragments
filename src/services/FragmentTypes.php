@@ -8,14 +8,19 @@ use craft\db\Query;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
 use craft\helpers\StringHelper;
-use thepixelage\fragments\db\Table;
 use thepixelage\fragments\models\FragmentType;
+use thepixelage\fragments\records\FragmentType as FragmentTypeRecord;
 use yii\base\ErrorException;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\web\ServerErrorHttpException;
 
+/**
+ *
+ * @property-read array $allFragmentTypes
+ * @property-read int $fragmentTypeCount
+ */
 class FragmentTypes extends Component
 {
     public function getAllFragmentTypes(): array
@@ -61,7 +66,7 @@ class FragmentTypes extends Component
         if ($isNew) {
             $fragmentType->uid = StringHelper::UUID();
         } else if (!$fragmentType->uid) {
-            $fragmentType->uid = Db::uidById(Table::FRAGMENTTYPES, $fragmentType->id);
+            $fragmentType->uid = Db::uidById(FragmentTypeRecord::tableName(), $fragmentType->id);
         }
 
         if (!$fragmentType->validate()) {
@@ -75,7 +80,7 @@ class FragmentTypes extends Component
         ]);
 
         if ($isNew) {
-            $fragmentType->id = Db::idByUid(Table::FRAGMENTTYPES, $fragmentType->uid);
+            $fragmentType->id = Db::idByUid(FragmentTypeRecord::tableName(), $fragmentType->uid);
         }
 
         return true;
@@ -98,7 +103,7 @@ class FragmentTypes extends Component
 
         $id = (new Query())
             ->select(['id'])
-            ->from(Table::FRAGMENTTYPES)
+            ->from(FragmentTypeRecord::tableName())
             ->where(['uid' => $uid])
             ->scalar();
 
@@ -106,7 +111,7 @@ class FragmentTypes extends Component
 
         if ($isNew) {
             Craft::$app->db->createCommand()
-                ->insert(Table::FRAGMENTTYPES, [
+                ->insert(FragmentTypeRecord::tableName(), [
                     'uid' => $uid,
                     'name' => $event->newValue['name'],
                     'handle' => $event->newValue['handle'],
@@ -114,7 +119,7 @@ class FragmentTypes extends Component
                 ->execute();
         } else {
             Craft::$app->db->createCommand()
-                ->update(Table::FRAGMENTTYPES, [
+                ->update(FragmentTypeRecord::tableName(), [
                     'name' => $event->newValue['name'],
                     'handle' => $event->newValue['handle'],
                 ], ['id' => $id])
@@ -134,7 +139,7 @@ class FragmentTypes extends Component
         }
 
         Craft::$app->db->createCommand()
-            ->delete(Table::FRAGMENTTYPES, ['id' => $fragmentType->id])
+            ->delete(FragmentTypeRecord::tableName(), ['id' => $fragmentType->id])
             ->execute();
     }
 
@@ -147,6 +152,6 @@ class FragmentTypes extends Component
                 'handle',
                 'uid'
             ])
-            ->from([Table::FRAGMENTTYPES]);
+            ->from([FragmentTypeRecord::tableName()]);
     }
 }
