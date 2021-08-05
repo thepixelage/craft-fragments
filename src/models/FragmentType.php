@@ -19,6 +19,7 @@ use thepixelage\fragments\records\FragmentType as FragmentTypeRecord;
  * @property-read mixed $fieldLayout
  * @property-read array $config
  * @method FieldLayout getFieldLayout
+ * @method setFieldLayout($fieldLayout)
  */
 class FragmentType extends Model
 {

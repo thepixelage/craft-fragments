@@ -8,3 +8,7 @@
         'url': cpUrl('fragments'),
     }
 ] %}
+
+{% block actionButton %}
+    <a href="{{ cpUrl('fragments/fragments/ctas/new') }}" class="btn submit add icon">New fragment</a>
+{% endblock %}

@@ -5,11 +5,11 @@ namespace thepixelage\fragments\services;
 use Craft;
 use craft\base\Component;
 use craft\db\Query;
-use craft\db\Table;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
 use craft\helpers\StringHelper;
 use craft\models\FieldLayout;
+use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\records\FragmentType as FragmentTypeRecord;
@@ -79,7 +79,7 @@ class FragmentTypes extends Component
         if ($isNew) {
             $fragmentType->uid = StringHelper::UUID();
         } else if (!$fragmentType->uid) {
-            $fragmentType->uid = Db::uidById(FragmentTypeRecord::tableName(), $fragmentType->id);
+            $fragmentType->uid = Db::uidById(Table::FRAGMENTTYPES, $fragmentType->id);
         }
 
         if (!$fragmentType->validate()) {
@@ -107,7 +107,7 @@ class FragmentTypes extends Component
         Craft::$app->projectConfig->set($path, $config);
 
         if ($isNew) {
-            $fragmentType->id = Db::idByUid(FragmentTypeRecord::tableName(), $fragmentType->uid);
+            $fragmentType->id = Db::idByUid(Table::FRAGMENTTYPES, $fragmentType->uid);
         }
 
         return true;
@@ -169,7 +169,7 @@ class FragmentTypes extends Component
         }
 
         Craft::$app->db->createCommand()
-            ->delete(FragmentTypeRecord::tableName(), ['id' => $fragmentType->id])
+            ->delete(Table::FRAGMENTTYPES, ['id' => $fragmentType->id])
             ->execute();
     }
 
@@ -183,7 +183,7 @@ class FragmentTypes extends Component
                 'uid',
                 'fieldLayoutId',
             ])
-            ->from([FragmentTypeRecord::tableName()]);
+            ->from([Table::FRAGMENTTYPES]);
     }
 
     private function getFragmentTypeRecord(string $uid): FragmentTypeRecord

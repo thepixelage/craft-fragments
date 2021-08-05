@@ -4,6 +4,8 @@ namespace thepixelage\fragments\elements;
 
 use Craft;
 use craft\base\Element;
+use craft\elements\actions\Delete;
+use craft\elements\actions\SetStatus;
 use craft\elements\db\ElementQueryInterface;
 use craft\models\FieldLayout;
 use thepixelage\fragments\db\Table;
@@ -15,6 +17,7 @@ use yii\db\Exception;
 
 /**
  *
+ * @property-read null|int $sourceId
  * @property-read FragmentType $fragmentType
  */
 class Fragment extends Element
@@ -51,11 +54,6 @@ class Fragment extends Element
         return true;
     }
 
-    public function getSourceId(): ?int
-    {
-        return $this->fragmentTypeId;
-    }
-
     public function getIsEditable(): bool
     {
         return true;
@@ -87,9 +85,12 @@ class Fragment extends Element
         return $type;
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function getCpEditUrl(): string
     {
-        return 'fragments/fragments/' . $this->id;
+        return sprintf('fragments/fragments/%s/%s', $this->getFragmentType()->handle, $this->id);
     }
 
     /**
@@ -101,18 +102,26 @@ class Fragment extends Element
             Craft::$app->db->createCommand()
                 ->insert(Table::FRAGMENTS, [
                     'id' => $this->id,
-                    'typeId' => 0,
+                    'fragmentTypeId' => $this->fragmentTypeId,
                 ])
                 ->execute();
         } else {
             Craft::$app->db->createCommand()
                 ->update(Table::FRAGMENTS, [
-                    'typeId' => 0,
+                    'fragmentTypeId' => $this->fragmentTypeId,
                 ], ['id' => $this->id])
                 ->execute();
         }
 
         parent::afterSave($isNew);
+    }
+
+    protected static function defineActions(string $source = null): array
+    {
+        return [
+            SetStatus::class,
+            Delete::class,
+        ];
     }
 
     protected static function defineSources(string $context = null): array
@@ -124,7 +133,7 @@ class Fragment extends Element
                 'key' => 'type:' . $fragmentType['uid'],
                 'label' => Craft::t('site', $fragmentType['name']),
                 'data' => ['handle' => $fragmentType['handle']],
-                'criteria' => ['typeId' => $fragmentType['id']],
+                'criteria' => ['fragmentTypeId' => $fragmentType['id']],
             ];
         }, $fragmentTypes);
     }

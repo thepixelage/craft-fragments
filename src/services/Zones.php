@@ -8,8 +8,8 @@ use craft\db\Query;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
 use craft\helpers\StringHelper;
+use thepixelage\fragments\db\Table;
 use thepixelage\fragments\models\Zone;
-use thepixelage\fragments\records\Zone as ZoneRecord;
 use yii\base\ErrorException;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
@@ -66,7 +66,7 @@ class Zones extends Component
         if ($isNew) {
             $zone->uid = StringHelper::UUID();
         } else if (!$zone->uid) {
-            $zone->uid = Db::uidById(ZoneRecord::tableName(), $zone->id);
+            $zone->uid = Db::uidById(Table::ZONES, $zone->id);
         }
 
         if (!$zone->validate()) {
@@ -80,7 +80,7 @@ class Zones extends Component
         ]);
 
         if ($isNew) {
-            $zone->id = Db::idByUid(ZoneRecord::tableName(), $zone->uid);
+            $zone->id = Db::idByUid(Table::ZONES, $zone->uid);
         }
 
         return true;
@@ -114,7 +114,7 @@ class Zones extends Component
 
         $id = (new Query())
             ->select(['id'])
-            ->from(ZoneRecord::tableName())
+            ->from(Table::ZONES)
             ->where(['uid' => $uid])
             ->scalar();
 
@@ -122,7 +122,7 @@ class Zones extends Component
 
         if ($isNew) {
             Craft::$app->db->createCommand()
-                ->insert(ZoneRecord::tableName(), [
+                ->insert(Table::ZONES, [
                     'uid' => $uid,
                     'name' => $event->newValue['name'],
                     'handle' => $event->newValue['handle'],
@@ -130,7 +130,7 @@ class Zones extends Component
                 ->execute();
         } else {
             Craft::$app->db->createCommand()
-                ->update(ZoneRecord::tableName(), [
+                ->update(Table::ZONES, [
                     'name' => $event->newValue['name'],
                     'handle' => $event->newValue['handle'],
                 ], ['id' => $id])
@@ -150,7 +150,7 @@ class Zones extends Component
         }
 
         Craft::$app->db->createCommand()
-            ->delete(ZoneRecord::tableName(), ['id' => $zone->id])
+            ->delete(Table::ZONES, ['id' => $zone->id])
             ->execute();
     }
 
@@ -163,6 +163,6 @@ class Zones extends Component
                 'handle',
                 'uid'
             ])
-            ->from([ZoneRecord::tableName()]);
+            ->from([Table::ZONES]);
     }
 }

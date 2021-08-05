@@ -2,14 +2,23 @@
 
 {% import '_includes/forms' as forms %}
 
+{% set crumbs = [
+    {
+        'label': "Fragments"|t('fragments'),
+        'url': cpUrl('fragments'),
+    }
+] %}
+
 {% set title = "Edit Fragment"|t('fragments') %}
 
 {% set redirectUrl = "fragments/fragments/#{fragmentType.handle}" %}
 {% set canUpdateSource = true %}
+{% set canDeleteSource = true %}
 {% set saveSourceAction = 'fragments/fragments/save' %}
 {% set deleteSourceAction = 'fragments/fragments/delete' %}
 
 {% block content %}
+    {{ hiddenInput('fragmentTypeId', fragmentType.id) }}
     {{ parent() }}
 {% endblock %}
 
