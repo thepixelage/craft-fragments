@@ -15,7 +15,6 @@ use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
 use thepixelage\fragments\elements\Fragment;
-use thepixelage\fragments\services\Fragments;
 use thepixelage\fragments\services\FragmentTypes;
 use thepixelage\fragments\services\Zones;
 use thepixelage\fragments\variables\FragmentsVariable;
@@ -26,7 +25,6 @@ use yii\base\Event;
  *
  * @package thepixelage\fragments
  *
- * @property Fragments $fragments
  * @property FragmentTypes $fragmentTypes
  * @property Zones $zones
  *
@@ -88,7 +86,6 @@ class Plugin extends \craft\base\Plugin
     private function registerServices()
     {
         $this->setComponents([
-            'fragments' => Fragments::class,
             'fragmentTypes' => FragmentTypes::class,
             'zones' => Zones::class,
         ]);

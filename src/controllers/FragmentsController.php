@@ -31,7 +31,7 @@ class FragmentsController extends Controller
 
         if (!$fragment) {
             if ($fragmentId) {
-                $fragment = Plugin::getInstance()->fragments->getFragmentById($fragmentId);
+                $fragment = Craft::$app->getElements()->getElementById($fragmentId);
                 if (!$fragment) {
                     throw new BadRequestHttpException("Invalid fragment ID: $fragmentId");
                 }
@@ -66,7 +66,7 @@ class FragmentsController extends Controller
         $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
 
         if ($fragmentId) {
-            $fragment = Plugin::getInstance()->fragments->getFragmentById($fragmentId);
+            $fragment = Craft::$app->getElements()->getElementById($fragmentId);
             if (!$fragment) {
                 throw new BadRequestHttpException("Invalid fragment ID: $fragmentId");
             }
@@ -113,7 +113,7 @@ class FragmentsController extends Controller
         $this->requirePostRequest();
 
         $fragmentId = $this->request->getRequiredBodyParam('sourceId');
-        $fragment = Plugin::getInstance()->fragments->getFragmentById($fragmentId);
+        $fragment = Craft::$app->getElements()->getElementById($fragmentId);
 
         if (!$fragment) {
             throw new NotFoundHttpException("Fragment not found");
