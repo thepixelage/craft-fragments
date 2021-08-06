@@ -1,4 +1,4 @@
-{% extends '@fragments/_layouts/base.twig' %}
+{% extends '@fragments/_layouts/settings.twig' %}
 
 {% import '_includes/forms' as forms %}
 
@@ -16,6 +16,8 @@
 ] %}
 
 {% set fullPageForm = true %}
+
+{% block sidebar %}{% endblock %}
 
 {% block content %}
 

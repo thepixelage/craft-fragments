@@ -136,17 +136,6 @@ class Zones extends Component
         return true;
     }
 
-    public function deleteZoneById($id): bool
-    {
-        $zone = $this->getZoneById($id);
-
-        if (!$zone) {
-            return false;
-        }
-
-        return $this->deleteZone($zone);
-    }
-
     /**
      * @throws \yii\db\Exception
      * @throws StructureNotFoundException
@@ -175,6 +164,7 @@ class Zones extends Component
             $structuresService->saveStructure($structure);
 
             $zoneRecord->structureId = $structure->id;
+            $zoneRecord->uid = $zoneUid;
             $zoneRecord->name = $data['name'];
             $zoneRecord->handle = $data['handle'];
 

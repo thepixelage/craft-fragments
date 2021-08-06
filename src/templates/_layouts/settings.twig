@@ -2,6 +2,7 @@
 
 {% set title = "Settings"|t('fragments') %}
 {% set selectedSubnavItem = 'settings' %}
+{% set selectedSidebarNavItem = (selectedSidebarNavItem is defined) ? selectedSidebarNavItem : 'settings' %}
 
 {% block sidebar %}
     {{ include('@fragments/_includes/sidebar/settings.twig', {
