@@ -53,6 +53,11 @@ class Fragment extends Element
         return true;
     }
 
+    public static function hasStatuses(): bool
+    {
+        return true;
+    }
+
     public static function isLocalized(): bool
     {
         return true;
