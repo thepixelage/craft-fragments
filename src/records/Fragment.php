@@ -27,6 +27,11 @@ class Fragment extends ActiveRecord
         return $this->hasOne(Element::class, ['id' => 'id']);
     }
 
+    public function getFragmentType(): ActiveQueryInterface
+    {
+        return $this->hasOne(FragmentType::class, ['id' => 'fragmentTypeId']);
+    }
+
     public function getZone(): ActiveQueryInterface
     {
         return $this->hasOne(Zone::class, ['id' => 'zoneId']);
