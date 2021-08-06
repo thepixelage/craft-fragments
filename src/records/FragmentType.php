@@ -14,6 +14,7 @@ use yii\db\ActiveQueryInterface;
  * @property int $id ID
  * @property int $fieldLayoutId Field layout ID
  * @property string $name Name
+ * @property-read ActiveQueryInterface $fragments
  * @property string $handle Handle
  */
 class FragmentType extends ActiveRecord
