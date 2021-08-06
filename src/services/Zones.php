@@ -4,12 +4,18 @@ namespace thepixelage\fragments\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\MemoizableArray;
 use craft\db\Query;
+use craft\errors\StructureNotFoundException;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
+use craft\helpers\ProjectConfig as ProjectConfigHelper;
 use craft\helpers\StringHelper;
+use craft\models\Structure;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\models\Zone;
+use thepixelage\fragments\records\Zone as ZoneRecord;
+use Throwable;
 use yii\base\ErrorException;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
@@ -23,9 +29,32 @@ use yii\web\ServerErrorHttpException;
  */
 class Zones extends Component
 {
+    private ?MemoizableArray $zones = null;
+
     public function getAllZones(): array
     {
-        return $this->createZonesQuery()->all();
+        if ($this->zones === null) {
+            $zones = [];
+
+            $zoneRecords = ZoneRecord::find()
+                ->orderBy(['name' => SORT_ASC])
+                ->with('structure')
+                ->all();
+
+            foreach ($zoneRecords as $zoneRecord) {
+                $zones[] = new Zone($zoneRecord->toArray([
+                    'id',
+                    'structureId',
+                    'name',
+                    'handle',
+                    'uid',
+                ]));
+            }
+
+            $this->zones = new MemoizableArray($zones);
+        }
+
+        return $this->zones->all();
     }
 
     public function getZoneById($id): ?Zone
@@ -41,6 +70,15 @@ class Zones extends Component
     {
         $result = $this->createZonesQuery()
             ->where(['uid' => $uid])
+            ->one();
+
+        return $result ? new Zone($result) : null;
+    }
+
+    public function getZoneByHandle($handle): ?Zone
+    {
+        $result = $this->createZonesQuery()
+            ->where(['handle' => $handle])
             ->one();
 
         return $result ? new Zone($result) : null;
@@ -77,6 +115,10 @@ class Zones extends Component
         Craft::$app->projectConfig->set($path, [
             'name' => $zone->name,
             'handle' => $zone->handle,
+            'structure' => [
+                'uid' => $zone->structureId ? Db::uidById(Table::STRUCTURES, $zone->structureId) : StringHelper::UUID(),
+                'maxLevels' => (int)$zone->maxLevels ?: null,
+            ],
         ]);
 
         if ($isNew) {
@@ -107,35 +149,74 @@ class Zones extends Component
 
     /**
      * @throws \yii\db\Exception
+     * @throws StructureNotFoundException
+     * @throws Throwable
      */
     public function handleChangedZone(ConfigEvent $event)
     {
-        $uid = $event->tokenMatches[0];
+        $zoneUid = $event->tokenMatches[0];
+        $data = $event->newValue;
 
-        $id = (new Query())
-            ->select(['id'])
-            ->from(Table::ZONES)
-            ->where(['uid' => $uid])
-            ->scalar();
+        ProjectConfigHelper::ensureAllFieldsProcessed();
 
-        $isNew = empty($id);
+        $transaction = Craft::$app->getDb()->beginTransaction();
 
-        if ($isNew) {
-            Craft::$app->db->createCommand()
-                ->insert(Table::ZONES, [
-                    'uid' => $uid,
-                    'name' => $event->newValue['name'],
-                    'handle' => $event->newValue['handle'],
-                ])
-                ->execute();
-        } else {
-            Craft::$app->db->createCommand()
-                ->update(Table::ZONES, [
-                    'name' => $event->newValue['name'],
-                    'handle' => $event->newValue['handle'],
-                ], ['id' => $id])
-                ->execute();
+        try {
+            $structureData = $data['structure'];
+            $structureUid = $structureData['uid'];
+
+            // Basic data
+            $zoneRecord = $this->getZoneRecord($zoneUid, true);
+
+            // Structure
+            $structuresService = Craft::$app->getStructures();
+            $structure = $structuresService->getStructureByUid($structureUid, true) ?? new Structure(['uid' => $structureUid]);
+            $structure->maxLevels = $structureData['maxLevels'];
+            $structuresService->saveStructure($structure);
+
+            $zoneRecord->structureId = $structure->id;
+            $zoneRecord->name = $data['name'];
+            $zoneRecord->handle = $data['handle'];
+
+            $wasTrashed = (bool)$zoneRecord->dateDeleted;
+            if ($wasTrashed) {
+                $zoneRecord->restore();
+            } else {
+                $zoneRecord->save(false);
+            }
+
+            $transaction->commit();
+        } catch (Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
         }
+
+
+
+//        $id = (new Query())
+//            ->select(['id'])
+//            ->from(Table::ZONES)
+//            ->where(['uid' => $uid])
+//            ->scalar();
+//
+//        $isNew = empty($id);
+//
+//        if ($isNew) {
+//            Craft::$app->db->createCommand()
+//                ->insert(Table::ZONES, [
+//                    'uid' => $uid,
+//                    'name' => $data['name'],
+//                    'handle' => $data['handle'],
+//                ])
+//                ->execute();
+//        } else {
+//            Craft::$app->db->createCommand()
+//                ->update(Table::ZONES, [
+//                    'name' => $data['name'],
+//                    'handle' => $data['handle'],
+//                ], ['id' => $id])
+//                ->execute();
+//        }
     }
 
     /**
@@ -161,8 +242,17 @@ class Zones extends Component
                 'id',
                 'name',
                 'handle',
+                'structureId',
                 'uid'
             ])
             ->from([Table::ZONES]);
+    }
+
+    private function getZoneRecord(string $uid, bool $withTrashed = false): ZoneRecord
+    {
+        $query = $withTrashed ? ZoneRecord::findWithTrashed() : ZoneRecord::find();
+        $query->andWhere(['uid' => $uid]);
+
+        return $query->one() ?? new ZoneRecord();
     }
 }

@@ -18,6 +18,7 @@
 {% set deleteSourceAction = 'fragments/fragments/delete' %}
 
 {% block content %}
+    {{ hiddenInput('zoneId', zone.id) }}
     {{ hiddenInput('fragmentTypeId', fragmentType.id) }}
     {{ parent() }}
 {% endblock %}

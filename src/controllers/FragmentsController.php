@@ -24,8 +24,9 @@ class FragmentsController extends Controller
     /**
      * @throws BadRequestHttpException
      */
-    public function actionEdit(string $fragmentTypeHandle, ?int $fragmentId = null, ?Fragment $fragment = null): Response
+    public function actionEdit(string $zoneHandle, string $fragmentTypeHandle, ?int $fragmentId = null, ?Fragment $fragment = null): Response
     {
+        $zone = Plugin::getInstance()->zones->getZoneByHandle($zoneHandle);
         $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeByHandle($fragmentTypeHandle);
 
         if (!$fragment) {
@@ -37,11 +38,13 @@ class FragmentsController extends Controller
             } else {
                 $fragment = new Fragment();
                 $fragment->fragmentTypeId = $fragmentType->id;
+                $fragment->zoneId = $zone->id;
             }
         }
 
         return $this->renderTemplate('@fragments/fragments/_edit.twig', [
             'element' => $fragment,
+            'zone' => $zone,
             'fragmentType' => $fragmentType,
         ]);
     }
@@ -56,7 +59,10 @@ class FragmentsController extends Controller
     public function actionSave(): ?Response
     {
         $fragmentId = $this->request->getBodyParam('sourceId');
+        $zoneId = $this->request->getBodyParam('zoneId');
         $fragmentTypeId = $this->request->getBodyParam('fragmentTypeId');
+
+        $zone = Plugin::getInstance()->zones->getZoneById($zoneId);
         $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
 
         if ($fragmentId) {
@@ -66,8 +72,10 @@ class FragmentsController extends Controller
             }
         } else {
             $fragment = new Fragment();
-            $fragment->fragmentTypeId = $fragmentType->id;
         }
+
+        $fragment->zoneId = $zone->id;
+        $fragment->fragmentTypeId = $fragmentType->id;
 
         $fragment->title = $this->request->getBodyParam('title', $fragment->title);
         $fragment->slug = $this->request->getBodyParam('slug', $fragment->slug);

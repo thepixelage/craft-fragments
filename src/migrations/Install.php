@@ -21,13 +21,12 @@ class Install extends Migration
     private function _createTables()
     {
         $this->createTable(Table::FRAGMENTS, [
-            'id'          => $this->integer()->notNull(),
-            'typeId'      => $this->integer()->notNull(),
-            'startDate'   => $this->dateTime(),
-            'endDate'     => $this->dateTime(),
-            'dateCreated' => $this->dateTime()->notNull(),
-            'dateUpdated' => $this->dateTime()->notNull(),
-            'uid'         => $this->uid(),
+            'id'             => $this->integer()->notNull(),
+            'zoneId'         => $this->integer()->notNull(),
+            'fragmentTypeId' => $this->integer()->notNull(),
+            'dateCreated'    => $this->dateTime()->notNull(),
+            'dateUpdated'    => $this->dateTime()->notNull(),
+            'uid'            => $this->uid(),
             'PRIMARY KEY([[id]])',
         ]);
 
@@ -46,16 +45,9 @@ class Install extends Migration
             'id'            => $this->primaryKey(),
             'name'          => $this->string()->notNull(),
             'handle'        => $this->string()->notNull(),
+            'structureId'   => $this->integer(),
             'dateCreated'   => $this->dateTime()->notNull(),
-            'dateUpdated'   => $this->dateTime()->notNull(),
-            'uid'           => $this->uid(),
-        ]);
-
-        $this->createTable(Table::FRAGMENTS_ZONES, [
-            'id'            => $this->primaryKey(),
-            'fragmentId'    => $this->integer()->notNull(),
-            'zoneId'        => $this->integer()->notNull(),
-            'dateCreated'   => $this->dateTime()->notNull(),
+            'dateDeleted'   => $this->dateTime(),
             'dateUpdated'   => $this->dateTime()->notNull(),
             'uid'           => $this->uid(),
         ]);
@@ -66,6 +58,5 @@ class Install extends Migration
         $this->dropTableIfExists(Table::FRAGMENTS);
         $this->dropTableIfExists(Table::FRAGMENTTYPES);
         $this->dropTableIfExists(Table::ZONES);
-        $this->dropTableIfExists(Table::FRAGMENTS_ZONES);
     }
 }

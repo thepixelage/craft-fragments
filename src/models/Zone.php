@@ -13,10 +13,13 @@ class Zone extends Model
     public ?string $name = null;
     public ?string $handle = null;
     public ?string $uid = null;
+    public ?int $structureId = null;
+    public ?int $maxLevels = 1;
 
     protected function defineRules(): array
     {
         $rules = parent::defineRules();
+        $rules[] = [['id', 'structureId', 'maxLevels'], 'number', 'integerOnly' => true];
         $rules[] = [['handle'], HandleValidator::class, 'reservedWords' => ['id', 'dateCreated', 'dateUpdated', 'uid', 'title']];
         $rules[] = [['name', 'handle'], UniqueValidator::class, 'targetClass' => ZoneRecord::class];
         $rules[] = [['name', 'handle'], 'required'];

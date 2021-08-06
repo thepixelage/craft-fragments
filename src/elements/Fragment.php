@@ -8,21 +8,25 @@ use craft\elements\actions\Delete;
 use craft\elements\actions\SetStatus;
 use craft\elements\db\ElementQueryInterface;
 use craft\models\FieldLayout;
-use thepixelage\fragments\db\Table;
+use craft\services\Structures;
 use thepixelage\fragments\elements\db\FragmentQuery;
 use thepixelage\fragments\models\FragmentType;
+use thepixelage\fragments\models\Zone;
 use thepixelage\fragments\Plugin;
+use thepixelage\fragments\records\Fragment as FragmentRecord;
 use yii\base\InvalidConfigException;
 use yii\db\Exception;
 
 /**
  *
  * @property-read null|int $sourceId
+ * @property-read Zone $zone
  * @property-read FragmentType $fragmentType
  */
 class Fragment extends Element
 {
     public ?int $fragmentTypeId;
+    public ?int $zoneId;
 
     public static function displayName(): string
     {
@@ -70,6 +74,24 @@ class Fragment extends Element
     /**
      * @throws InvalidConfigException
      */
+    public function getZone(): Zone
+    {
+        if ($this->zoneId === null) {
+            throw new InvalidConfigException('Fragment is missing its zone ID');
+        }
+
+        $zone = Plugin::$plugin->zones->getZoneById($this->zoneId);
+
+        if (!$zone) {
+            throw new InvalidConfigException('Invalid fragment zone ID: ' . $this->zoneId);
+        }
+
+        return $zone;
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
     public function getFragmentType(): FragmentType
     {
         if ($this->fragmentTypeId === null) {
@@ -90,27 +112,49 @@ class Fragment extends Element
      */
     public function getCpEditUrl(): string
     {
-        return sprintf('fragments/fragments/%s/%s', $this->getFragmentType()->handle, $this->id);
+        return sprintf(
+            'fragments/fragments/%s/%s/%s',
+            $this->getZone()->handle,
+            $this->getFragmentType()->handle,
+            $this->id);
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function beforeSave(bool $isNew): bool
+    {
+        $this->structureId = $this->getZone()->structureId;
+
+        return parent::beforeSave($isNew);
     }
 
     /**
      * @throws Exception
+     * @throws \yii\base\Exception
      */
     public function afterSave(bool $isNew)
     {
-        if ($isNew) {
-            Craft::$app->db->createCommand()
-                ->insert(Table::FRAGMENTS, [
-                    'id' => $this->id,
-                    'fragmentTypeId' => $this->fragmentTypeId,
-                ])
-                ->execute();
-        } else {
-            Craft::$app->db->createCommand()
-                ->update(Table::FRAGMENTS, [
-                    'fragmentTypeId' => $this->fragmentTypeId,
-                ], ['id' => $this->id])
-                ->execute();
+        if (!$this->propagating) {
+            if (!$isNew) {
+                $record = FragmentRecord::findOne($this->id);
+
+                if (!$record) {
+                    throw new Exception('Invalid fragment ID: ' . $this->id);
+                }
+            } else {
+                $record = new FragmentRecord();
+                $record->id = (int)$this->id;
+            }
+
+            $record->zoneId = (int)$this->zoneId;
+            $record->fragmentTypeId = (int)$this->fragmentTypeId;
+            $record->save(false);
+
+            if (!$this->duplicateOf) {
+                $mode = $isNew ? Structures::MODE_INSERT : Structures::MODE_AUTO;
+                Craft::$app->getStructures()->appendToRoot($this->structureId, $this, $mode);
+            }
         }
 
         parent::afterSave($isNew);
@@ -126,16 +170,18 @@ class Fragment extends Element
 
     protected static function defineSources(string $context = null): array
     {
-        $fragmentTypes = Plugin::getInstance()->fragmentTypes->getAllFragmentTypes();
+        $zones = Plugin::getInstance()->zones->getAllZones();
 
-        return array_map(function ($fragmentType) {
+        return array_map(function ($zone) {
             return [
-                'key' => 'type:' . $fragmentType['uid'],
-                'label' => Craft::t('site', $fragmentType['name']),
-                'data' => ['handle' => $fragmentType['handle']],
-                'criteria' => ['fragmentTypeId' => $fragmentType['id']],
+                'key' => 'type:' . $zone['uid'],
+                'label' => Craft::t('site', $zone['name']),
+                'data' => ['handle' => $zone['handle']],
+                'criteria' => ['zoneId' => $zone['id']],
+                'structureId' => $zone['structureId'],
+                'structureEditable' => true,
             ];
-        }, $fragmentTypes);
+        }, $zones);
     }
 
     protected static function defineSortOptions(): array

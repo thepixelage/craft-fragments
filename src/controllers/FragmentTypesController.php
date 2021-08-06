@@ -18,8 +18,13 @@ use yii\web\ServerErrorHttpException;
 
 class FragmentTypesController extends Controller
 {
+    /**
+     * @throws ForbiddenHttpException
+     */
     public function actionIndex(): Response
     {
+        $this->requireAdmin();
+
         return $this->renderTemplate('@fragments/settings/fragmenttypes/_index.twig', [
             'types' => Plugin::getInstance()->fragmentTypes->getAllFragmentTypes(),
         ]);

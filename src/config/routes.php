@@ -8,8 +8,7 @@ return [
     'fragments/settings/zones/new' => 'fragments/zones/edit',
     'fragments/settings/zones/<zoneId:\d+>' => 'fragments/zones/edit',
     'fragments/fragments' => 'fragments/fragments/index',
-    'fragments/fragments/<fragmentTypeHandle:{handle}>' => 'fragments/fragments/index',
-    'fragments/fragments/<fragmentTypeHandle:{handle}>/save' => 'fragments/fragments/save',
-    'fragments/fragments/<fragmentTypeHandle:{handle}>/new' => 'fragments/fragments/edit',
-    'fragments/fragments/<fragmentTypeHandle:{handle}>/<fragmentId:\d+>' => 'fragments/fragments/edit',
+    'fragments/fragments/<zoneHandle:{handle}>' => 'fragments/fragments/index',
+    'fragments/fragments/<zoneHandle:{handle}>/<fragmentTypeHandle:{handle}>/new' => 'fragments/fragments/edit',
+    'fragments/fragments/<zoneHandle:{handle}>/<fragmentTypeHandle:{handle}>/<fragmentId:\d+>' => 'fragments/fragments/edit',
 ];

@@ -5,14 +5,12 @@ namespace thepixelage\fragments;
 use Craft;
 use craft\events\DefineFieldLayoutFieldsEvent;
 use craft\events\RegisterComponentTypesEvent;
-use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\fieldlayoutelements\TitleField;
 use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
 use craft\services\Elements;
-use craft\web\twig\variables\Cp;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
@@ -32,6 +30,7 @@ use yii\base\Event;
  * @property FragmentTypes $fragmentTypes
  * @property Zones $zones
  *
+ * @property-read null|array $cpNavItem
  * @property-read mixed $settingsResponse
  */
 class Plugin extends \craft\base\Plugin
@@ -40,7 +39,7 @@ class Plugin extends \craft\base\Plugin
 
     public $schemaVersion = '1.0.0';
     public $hasCpSettings = true;
-    public $hasCpSection = false;
+    public $hasCpSection = true;
 
     public function init()
     {
@@ -53,16 +52,37 @@ class Plugin extends \craft\base\Plugin
         $this->registerVariables();
         $this->registerTemplateRoot();
         $this->registerCpRoutes();
-        $this->registerCpNavItems();
         $this->registerProjectConfigChangeListeners();
         $this->registerFieldLayoutStandardFields();
     }
 
     public function getSettingsResponse()
     {
-        $url = UrlHelper::cpUrl('fragments/settings');
+        return Craft::$app->controller->redirect(UrlHelper::cpUrl('fragments/settings'));
+    }
 
-        return Craft::$app->controller->redirect($url);
+    public function getCpNavItem(): ?array
+    {
+        $subNavs = [];
+        $navItem = parent::getCpNavItem();
+        $currentUser = Craft::$app->getUser()->getIdentity();
+        $generalConfig = Craft::$app->getConfig()->getGeneral();
+
+        if ($generalConfig->allowAdminChanges && $currentUser->admin) {
+            $subNavs['fragments'] = [
+                'label' => Craft::t('fragments', "Fragments"),
+                'url' => 'fragments/fragments',
+            ];
+
+            $subNavs['settings'] = [
+                'label' => Craft::t('fragments', "Settings"),
+                'url' => 'fragments/settings',
+            ];
+        }
+
+        return array_merge($navItem, [
+            'subnav' => $subNavs,
+        ]);
     }
 
     private function registerServices()
@@ -107,40 +127,6 @@ class Plugin extends \craft\base\Plugin
             View::EVENT_REGISTER_CP_TEMPLATE_ROOTS,
             function(RegisterTemplateRootsEvent $event) {
                 $event->roots['@fragments'] = __DIR__ . '/templates/';
-            }
-        );
-    }
-
-    private function registerCpNavItems()
-    {
-        Event::on(
-            Cp::class,
-            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-            function(RegisterCpNavItemsEvent $event) {
-                $fragmentNavItems = [
-                    'url' => 'fragments',
-                    'label' => 'Fragments',
-                    'icon' => '@thepixelage/fragments/icon.svg',
-                    'subnav' => [
-                        'fragments' => ['label' => 'Fragments', 'url' => 'fragments'],
-                        'zones' => ['label' => 'Zones', 'url' => 'fragments/zones'],
-                        'settings' => ['label' => 'Settings', 'url' => 'settings/plugins/fragments'],
-                    ],
-                ];
-
-                if ($this->fragmentTypes->getFragmentTypeCount() == 0) {
-                    unset($fragmentNavItems['subnav']['fragments']);
-                }
-
-                if ($this->zones->getZoneCount() == 0) {
-                    unset($fragmentNavItems['subnav']['zones']);
-                }
-
-                if (!Craft::$app->config->general->allowAdminChanges) {
-                    unset($fragmentNavItems['subnav']['settings']);
-                }
-
-                $event->navItems[] = $fragmentNavItems;
             }
         );
     }
