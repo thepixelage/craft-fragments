@@ -190,33 +190,6 @@ class Zones extends Component
             $transaction->rollBack();
             throw $e;
         }
-
-
-
-//        $id = (new Query())
-//            ->select(['id'])
-//            ->from(Table::ZONES)
-//            ->where(['uid' => $uid])
-//            ->scalar();
-//
-//        $isNew = empty($id);
-//
-//        if ($isNew) {
-//            Craft::$app->db->createCommand()
-//                ->insert(Table::ZONES, [
-//                    'uid' => $uid,
-//                    'name' => $data['name'],
-//                    'handle' => $data['handle'],
-//                ])
-//                ->execute();
-//        } else {
-//            Craft::$app->db->createCommand()
-//                ->update(Table::ZONES, [
-//                    'name' => $data['name'],
-//                    'handle' => $data['handle'],
-//                ], ['id' => $id])
-//                ->execute();
-//        }
     }
 
     /**
