@@ -2,6 +2,10 @@
 {% set elementType = 'thepixelage\\fragments\\elements\\Fragment' %}
 {% set title = "Fragments"|t('fragments') %}
 
+{% do view.registerJsFile(indexJsUrl, {
+    depends: 'craft\\web\\assets\\cp\\CpAsset'
+}) %}
+
 {% set crumbs = [
     {
         'label': "Fragments"|t('fragments'),
@@ -9,6 +13,8 @@
     }
 ] %}
 
-{% block actionButton %}
-    <a href="{{ cpUrl('fragments/fragments/zoneA/fragmentTypeX/new') }}" class="btn submit add icon">New fragment</a>
+{% block initJs %}
+    Craft.fragmentTypes = {{ fragmentTypesJson|raw }};
+
+    {{ parent() }}
 {% endblock %}

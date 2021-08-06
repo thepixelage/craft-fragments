@@ -4,6 +4,7 @@ namespace thepixelage\fragments\controllers;
 
 use Craft;
 use craft\errors\ElementNotFoundException;
+use craft\helpers\Json;
 use craft\web\Controller;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\Plugin;
@@ -18,7 +19,29 @@ class FragmentsController extends Controller
 {
     public function actionIndex(): Response
     {
-        return $this->renderTemplate('@fragments/fragments/_index.twig');
+        $fragmentTypes = array_filter(
+            Plugin::getInstance()->fragmentTypes->getAllFragmentTypes(),
+            function ($type) {
+                return [
+                    'handle' => $type['handle'],
+                    'id' => (int)$type['id'],
+                    'name' => Craft::t('site', $type['name']),
+                    'uid' => Craft::t('site', $type['uid']),
+                ];
+            }
+        );
+
+        $indexJsUrl = Craft::$app->assetManager->getPublishedUrl(
+            '@thepixelage/fragments/resources/js/FragmentIndex.js',
+            true
+        );
+
+        $fragmentTypesJson = Json::encode($fragmentTypes, JSON_UNESCAPED_UNICODE);
+
+        return $this->renderTemplate('@fragments/fragments/_index.twig', [
+            'indexJsUrl' => $indexJsUrl,
+            'fragmentTypesJson' => $fragmentTypesJson,
+        ]);
     }
 
     /**

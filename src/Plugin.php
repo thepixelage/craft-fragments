@@ -11,10 +11,12 @@ use craft\fieldlayoutelements\TitleField;
 use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
 use craft\services\Elements;
+use craft\services\Fields;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
 use thepixelage\fragments\elements\Fragment;
+use thepixelage\fragments\fields\Fragments;
 use thepixelage\fragments\services\FragmentTypes;
 use thepixelage\fragments\services\Zones;
 use thepixelage\fragments\variables\FragmentsVariable;
@@ -47,6 +49,7 @@ class Plugin extends \craft\base\Plugin
 
         $this->registerServices();
         $this->registerElementTypes();
+        $this->registerFieldTypes();
         $this->registerVariables();
         $this->registerTemplateRoot();
         $this->registerCpRoutes();
@@ -97,6 +100,17 @@ class Plugin extends \craft\base\Plugin
             Elements::EVENT_REGISTER_ELEMENT_TYPES,
             function(RegisterComponentTypesEvent $event) {
                 $event->types[] = Fragment::class;
+            }
+        );
+    }
+
+    private function registerFieldTypes()
+    {
+        Event::on(
+            Fields::class,
+            Fields::EVENT_REGISTER_FIELD_TYPES,
+            function(RegisterComponentTypesEvent $event) {
+                $event->types[] = Fragments::class;
             }
         );
     }
