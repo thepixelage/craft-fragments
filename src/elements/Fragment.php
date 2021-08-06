@@ -215,6 +215,7 @@ class Fragment extends Element
             'slug' => ['label' => Craft::t('app', "Slug")],
             'id' => ['label' => Craft::t('app', "ID")],
             'uid' => ['label' => Craft::t('app', "UID")],
+            'fragmentTypeId' => ['label' => Craft::t('app', "Fragment Type")],
             'dateCreated' => ['label' => Craft::t('app', "Date Created")],
             'dateUpdated' => ['label' => Craft::t('app', "Date Updated")],
         ];
@@ -223,7 +224,17 @@ class Fragment extends Element
     protected static function defineDefaultTableAttributes(string $source): array
     {
         return [
+            'fragmentTypeId',
             'slug'
         ];
+    }
+
+    protected function tableAttributeHtml(string $attribute): string
+    {
+        if ($attribute === 'fragmentTypeId') {
+            return $this->getFragmentType()->name;
+        }
+
+        return parent::tableAttributeHtml($attribute);
     }
 }
