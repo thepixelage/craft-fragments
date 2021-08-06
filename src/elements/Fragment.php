@@ -215,7 +215,7 @@ class Fragment extends Element
             'slug' => ['label' => Craft::t('app', "Slug")],
             'id' => ['label' => Craft::t('app', "ID")],
             'uid' => ['label' => Craft::t('app', "UID")],
-            'fragmentTypeId' => ['label' => Craft::t('app', "Fragment Type")],
+            'fragmentTypeId' => ['label' => Craft::t('app', "Type")],
             'dateCreated' => ['label' => Craft::t('app', "Date Created")],
             'dateUpdated' => ['label' => Craft::t('app', "Date Updated")],
         ];
