@@ -6,12 +6,16 @@
  * Category index class
  */
 Craft.FragmentIndex = Craft.BaseElementIndex.extend({
+    fragmentTypes: [],
     $newFragmentBtnGroup: null,
     $newFragmentBtn: null,
 
     init: function(elementType, $container, settings) {
         this.on('selectSource', $.proxy(this, 'updateButton'));
         this.on('selectSite', $.proxy(this, 'updateButton'));
+
+        this.fragmentTypes = Craft.fragmentTypes;
+
         this.base(elementType, $container, settings);
     },
 
@@ -28,7 +32,7 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
         // Update the New Fragment button
         // ---------------------------------------------------------------------
 
-        if (Craft.fragmentTypes.length) {
+        if (this.fragmentTypes.length) {
             // Remove the old button, if there is one
             if (this.$newFragmentBtnGroup) {
                 this.$newFragmentBtnGroup.remove();
@@ -38,9 +42,9 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
             var selectedGroup;
 
             if (selectedSourceHandle) {
-                for (i = 0; i < Craft.fragmentTypes.length; i++) {
-                    if (Craft.fragmentTypes[i].handle === selectedSourceHandle) {
-                        selectedGroup = Craft.fragmentTypes[i];
+                for (i = 0; i < this.fragmentTypes.length; i++) {
+                    if (this.fragmentTypes[i].handle === selectedSourceHandle) {
+                        selectedGroup = this.fragmentTypes[i];
                         break;
                     }
                 }
@@ -60,7 +64,7 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
                     });
                 }
 
-                if (Craft.fragmentTypes.length > 1) {
+                if (this.fragmentTypes.length > 1) {
                     $menuBtn = $('<button/>', {
                         type: 'button',
                         class: 'btn submit menubtn',
@@ -77,8 +81,8 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
             if ($menuBtn) {
                 var menuHtml = '<div class="menu"><ul>';
 
-                for (i = 0; i < Craft.fragmentTypes.length; i++) {
-                    var group = Craft.fragmentTypes[i];
+                for (i = 0; i < this.fragmentTypes.length; i++) {
+                    var group = this.fragmentTypes[i];
 
                     if (this.settings.context === 'index' || group !== selectedGroup) {
                         href = this._getGroupTriggerHref(group, selectedSourceHandle);
@@ -101,19 +105,33 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
 
             this.addButton(this.$newFragmentBtnGroup);
         }
+
+        // Update the URL if we're on the Entries index
+        // ---------------------------------------------------------------------
+
+        if (this.settings.context === 'index' && typeof history !== 'undefined') {
+            var uri = 'fragments/fragments';
+
+            if (selectedSourceHandle) {
+                uri += '/' + selectedSourceHandle;
+            }
+
+            history.replaceState({}, '', Craft.getUrl(uri));
+        }
     },
 
     _getGroupTriggerHref: function(group, selectedSourceHandle) {
         if (this.settings.context === 'index') {
             var uri = 'fragments/fragments/' + selectedSourceHandle + '/' + group.handle + '/new';
-            if (this.siteId && this.siteId !== Craft.primarySiteId) {
+            let params = {};
+            if (this.siteId) {
                 for (var i = 0; i < Craft.sites.length; i++) {
                     if (Craft.sites[i].id === this.siteId) {
-                        uri += '/' + Craft.sites[i].handle;
+                        params.site = Craft.sites[i].handle;
                     }
                 }
             }
-            return 'href="' + Craft.getUrl(uri) + '"';
+            return 'href="' + Craft.getUrl(uri, params) + '"';
         } else {
             return 'data-id="' + group.id + '"';
         }

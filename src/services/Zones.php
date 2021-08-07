@@ -320,6 +320,7 @@ class Zones extends Component
                 'name',
                 'handle',
                 'structureId',
+                'propagationMethod',
                 'uid'
             ])
             ->from([Table::ZONES]);

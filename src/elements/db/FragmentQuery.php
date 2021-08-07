@@ -18,6 +18,7 @@ class FragmentQuery extends ElementQuery
     public ?string $fragmentTypeHandle;
     public ?int $zoneId;
     public ?string $zoneHandle;
+    public ?bool $editable = false;
 
     public function init()
     {
@@ -50,6 +51,13 @@ class FragmentQuery extends ElementQuery
         if (is_string($value)) {
             $this->zoneHandle = $value;
         }
+
+        return $this;
+    }
+
+    public function editable(bool $value = true): FragmentQuery
+    {
+        $this->editable = $value;
 
         return $this;
     }

@@ -11,6 +11,7 @@ use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\Plugin;
 use Throwable;
 use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -48,16 +49,32 @@ class FragmentsController extends Controller
     /**
      * @throws BadRequestHttpException
      * @throws SiteNotFoundException
+     * @throws InvalidConfigException
+     * @throws NotFoundHttpException
      */
-    public function actionEdit(string $zoneHandle, string $fragmentTypeHandle, ?int $fragmentId = null, ?string $siteHandle = null, ?Fragment $fragment = null): Response
+    public function actionEdit(string $zone, string $type, ?int $fragmentId = null, ?string $site = null, ?Fragment $fragment = null): Response
     {
-        $zone = Plugin::getInstance()->zones->getZoneByHandle($zoneHandle);
-        $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeByHandle($fragmentTypeHandle);
-        $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : Craft::$app->getSites()->getCurrentSite();
+        $zone = Plugin::getInstance()->zones->getZoneByHandle($zone);
+        $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeByHandle($type);
+
+        if ($site !== null) {
+            $siteHandle = $site;
+            $site = Craft::$app->getSites()->getSiteByHandle($siteHandle);
+
+            if (!$site) {
+                throw new NotFoundHttpException('Invalid site handle: ' . $siteHandle);
+            }
+        }
 
         if (!$fragment) {
             if ($fragmentId) {
-                $fragment = Craft::$app->getElements()->getElementById($fragmentId);
+                $fragment = Fragment::find()
+                    ->id($fragmentId)
+                    ->structureId($zone->structureId)
+                    ->site($site)
+                    ->anyStatus()
+                    ->one();
+
                 if (!$fragment) {
                     throw new BadRequestHttpException("Invalid fragment ID: $fragmentId");
                 }
@@ -69,10 +86,22 @@ class FragmentsController extends Controller
             }
         }
 
+        if (Craft::$app->getIsMultiSite()) {
+            $siteIds = array_map(function ($site) {
+                return $site['siteId'];
+            }, $fragment->getSupportedSites());
+        } else {
+            /* @noinspection PhpUnhandledExceptionInspection */
+            $siteIds = [Craft::$app->getSites()->getPrimarySite()->id];
+        }
+
         return $this->renderTemplate('@fragments/fragments/_edit.twig', [
             'element' => $fragment,
             'zone' => $zone,
+            'site' => $site,
             'fragmentType' => $fragmentType,
+            'siteIds' => $siteIds,
+            'canUpdateSource' => true,
         ]);
     }
 
@@ -86,14 +115,22 @@ class FragmentsController extends Controller
     public function actionSave(): ?Response
     {
         $fragmentId = $this->request->getBodyParam('sourceId');
+        $siteId = $this->request->getBodyParam('siteId');
         $zoneId = $this->request->getBodyParam('zoneId');
         $fragmentTypeId = $this->request->getBodyParam('fragmentTypeId');
 
         $zone = Plugin::getInstance()->zones->getZoneById($zoneId);
         $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
+        $site = Craft::$app->getSites()->getSiteById($siteId);
 
         if ($fragmentId) {
-            $fragment = Craft::$app->getElements()->getElementById($fragmentId);
+            $fragment = Fragment::find()
+                ->id($fragmentId)
+                ->structureId($zone->structureId)
+                ->site($site)
+                ->anyStatus()
+                ->one();
+
             if (!$fragment) {
                 throw new BadRequestHttpException("Invalid fragment ID: $fragmentId");
             }
@@ -108,6 +145,15 @@ class FragmentsController extends Controller
         $fragment->slug = $this->request->getBodyParam('slug', $fragment->slug);
         $fragment->enabled = (bool)$this->request->getBodyParam('enabled', $fragment->enabled);
         $fragment->setFieldValuesFromRequest($this->request->getParam('fieldsLocation', 'fields'));
+
+        $enabledForSite = $this->enabledForSiteValue();
+        if (is_array($enabledForSite)) {
+            // Set the global status to true if it's enabled for *any* sites, or if already enabled.
+            $fragment->enabled = in_array(true, $enabledForSite, false) || $fragment->enabled;
+        } else {
+            $fragment->enabled = (bool)$this->request->getBodyParam('enabled', $fragment->enabled);
+        }
+        $fragment->setEnabledForSite($enabledForSite ?? $fragment->getEnabledForSite());
 
         if (!Craft::$app->elements->saveElement($fragment)) {
             if ($this->request->getAcceptsJson()) {
@@ -167,5 +213,22 @@ class FragmentsController extends Controller
         $this->setSuccessFlash(Craft::t('app', "Fragment deleted."));
 
         return $this->redirectToPostedUrl($fragment);
+    }
+
+    /**
+     * @throws ForbiddenHttpException
+     */
+    protected function enabledForSiteValue()
+    {
+        $enabledForSite = $this->request->getBodyParam('enabledForSite');
+        if (is_array($enabledForSite)) {
+            // Make sure they are allowed to edit all of the posted site IDs
+            $editableSiteIds = Craft::$app->getSites()->getEditableSiteIds();
+            if (array_diff(array_keys($enabledForSite), $editableSiteIds)) {
+                throw new ForbiddenHttpException('User not permitted to edit the statuses for all the submitted site IDs');
+            }
+        }
+
+        return $enabledForSite;
     }
 }

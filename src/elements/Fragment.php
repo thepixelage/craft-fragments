@@ -7,7 +7,10 @@ use craft\base\Element;
 use craft\elements\actions\Delete;
 use craft\elements\actions\SetStatus;
 use craft\elements\db\ElementQueryInterface;
+use craft\helpers\ArrayHelper;
+use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
+use craft\models\Site;
 use craft\services\Structures;
 use thepixelage\fragments\elements\db\FragmentQuery;
 use thepixelage\fragments\models\FragmentType;
@@ -117,11 +120,104 @@ class Fragment extends Element
      */
     public function getCpEditUrl(): string
     {
-        return sprintf(
-            'fragments/fragments/%s/%s/%s',
-            $this->getZone()->handle,
-            $this->getFragmentType()->handle,
-            $this->id);
+        $zone = $this->getZone();
+        $fragmentType = $this->getFragmentType();
+
+        // The slug *might* not be set if this is a Draft and they've deleted it for whatever reason
+        $path = 'fragments/fragments/' . $zone->handle . '/' . $fragmentType->handle . '/' . $this->getSourceId();
+
+        $params = [];
+        if (Craft::$app->getIsMultiSite()) {
+            $params['site'] = $this->getSite()->handle;
+        }
+
+        return UrlHelper::cpUrl($path, $params);
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function getSupportedSites(): array
+    {
+        $zone = $this->getZone();
+        /* @var Site[] $allSites */
+        $allSites = ArrayHelper::index(Craft::$app->getSites()->getAllSites(), 'id');
+        $sites = [];
+
+        // If the zone is leaving it up to entries to decide which sites to be propagated to,
+        // figure out which sites the entry is currently saved in
+        if (
+            ($this->duplicateOf->id ?? $this->id) &&
+            $zone->propagationMethod === Zone::PROPAGATION_METHOD_CUSTOM
+        ) {
+            if ($this->id) {
+                $currentSites = static::find()
+                    ->anyStatus()
+                    ->id($this->id)
+                    ->siteId('*')
+                    ->select('elements_sites.siteId')
+                    ->drafts($this->getIsDraft())
+                    ->revisions($this->getIsRevision())
+                    ->column();
+            } else {
+                $currentSites = [];
+            }
+
+            // If this is being duplicated from another element (e.g. a draft), include any sites the source element is saved to as well
+            if (!empty($this->duplicateOf->id)) {
+                array_push($currentSites, ...static::find()
+                    ->anyStatus()
+                    ->id($this->duplicateOf->id)
+                    ->siteId('*')
+                    ->select('elements_sites.siteId')
+                    ->drafts($this->duplicateOf->getIsDraft())
+                    ->revisions($this->duplicateOf->getIsRevision())
+                    ->column()
+                );
+            }
+
+            $currentSites = array_flip($currentSites);
+        }
+
+        foreach ($zone->getSiteSettings() as $siteSettings) {
+            switch ($zone->propagationMethod) {
+                case Zone::PROPAGATION_METHOD_NONE:
+                    $include = $siteSettings->siteId == $this->siteId;
+                    $propagate = true;
+                    break;
+                case Zone::PROPAGATION_METHOD_SITE_GROUP:
+                    $include = $allSites[$siteSettings->siteId]->groupId == $allSites[$this->siteId]->groupId;
+                    $propagate = true;
+                    break;
+                case Zone::PROPAGATION_METHOD_LANGUAGE:
+                    $include = $allSites[$siteSettings->siteId]->language == $allSites[$this->siteId]->language;
+                    $propagate = true;
+                    break;
+                case Zone::PROPAGATION_METHOD_CUSTOM:
+                    $include = true;
+                    // Only actually propagate to this site if it's the current site, or the entry has been assigned
+                    // a status for this site, or the entry already exists for this site
+                    $propagate = (
+                        $siteSettings->siteId == $this->siteId ||
+                        $this->getEnabledForSite($siteSettings->siteId) !== null ||
+                        isset($currentSites[$siteSettings->siteId])
+                    );
+                    break;
+                default:
+                    $include = $propagate = true;
+                    break;
+            }
+
+            if ($include) {
+                $sites[] = [
+                    'siteId' => $siteSettings->siteId,
+                    'propagate' => $propagate,
+                    'enabledByDefault' => $siteSettings->enabledByDefault,
+                ];
+            }
+        }
+
+        return $sites;
     }
 
     /**
@@ -175,18 +271,48 @@ class Fragment extends Element
 
     protected static function defineSources(string $context = null): array
     {
-        $zones = Plugin::getInstance()->zones->getAllZones();
+        if ($context === 'index') {
+            $zones = Plugin::getInstance()->zones->getAllZones();
+            $editable = true;
+        } else {
+            $zones = Plugin::getInstance()->zones->getAllZones();
+            $editable = false;
+        }
 
-        return array_map(function ($zone) {
-            return [
-                'key' => 'type:' . $zone['uid'],
-                'label' => Craft::t('site', $zone['name']),
-                'data' => ['handle' => $zone['handle']],
-                'criteria' => ['zoneId' => $zone['id']],
-                'structureId' => $zone['structureId'],
-                'structureEditable' => true,
+        $zoneIds = [];
+
+        foreach ($zones as $zone) {
+            $zoneIds[] = $zone->id;
+        }
+
+        $sources = [];
+
+        foreach ($zones as $zone) {
+            /* @var Zone $zone */
+            $source = [
+                'key' => 'zone:' . $zone->uid,
+                'label' => Craft::t('site', $zone->name),
+                'sites' => $zone->getSiteIds(),
+                'data' => [
+                    'handle' => $zone->handle,
+                ],
+                'criteria' => [
+                    'zoneId' => $zone->id,
+                    'editable' => $editable,
+                ],
             ];
-        }, $zones);
+
+            $source['defaultSort'] = ['structure', 'asc'];
+            $source['structureId'] = $zone->structureId;
+            $source['structureEditable'] = Craft::$app->getUser()->checkPermission('publishFragments:' . $zone->uid);
+            $source['defaultSort'] = ['structure', 'asc'];
+            $source['structureId'] = $zone->structureId;
+            $source['structureEditable'] = Craft::$app->getUser()->checkPermission('publishFragments:' . $zone->uid);
+
+            $sources[] = $source;
+        }
+
+        return $sources;
     }
 
     protected static function defineSortOptions(): array
