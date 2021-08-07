@@ -178,15 +178,17 @@ class FragmentsController extends Controller
         }
         $fragment->setEnabledForSite($enabledForSite ?? $fragment->getEnabledForSite());
 
+        $fragment->setScenario(Element::SCENARIO_LIVE);
+
         if (!Craft::$app->elements->saveElement($fragment)) {
             if ($this->request->getAcceptsJson()) {
-                return $this->asJson(['errors' => $fragmentType->getErrors()]);
+                return $this->asJson(['errors' => $fragment->getErrors()]);
             }
 
-            $this->setFailFlash(Craft::t('fragments', "Couldn’t save fragment type."));
+            $this->setFailFlash(Craft::t('fragments', "Couldn’t save fragment."));
 
             Craft::$app->urlManager->setRouteParams([
-                'fragmentType' => $fragmentType,
+                'fragment' => $fragment,
             ]);
 
             return null;
