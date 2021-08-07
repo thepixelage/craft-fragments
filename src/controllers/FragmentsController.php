@@ -3,10 +3,13 @@
 namespace thepixelage\fragments\controllers;
 
 use Craft;
+use craft\base\Element;
 use craft\errors\ElementNotFoundException;
 use craft\errors\SiteNotFoundException;
+use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\web\Controller;
+use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\Plugin;
 use Throwable;
@@ -173,6 +176,68 @@ class FragmentsController extends Controller
         $this->redirectToPostedUrl($fragment);
 
         return null;
+    }
+
+    /**
+     * @throws ElementNotFoundException
+     * @throws Throwable
+     * @throws Exception
+     * @throws NotFoundHttpException
+     * @throws BadRequestHttpException
+     */
+    public function actionDeleteForSite(): Response
+    {
+        $this->requirePostRequest();
+
+        // Make sure they have permission to access this site
+        $siteId = $this->request->getRequiredBodyParam('siteId');
+        $sitesService = Craft::$app->getSites();
+        $site = $sitesService->getSiteById($siteId);
+
+        if (!$site) {
+            throw new BadRequestHttpException("Invalid site ID: $siteId");
+        }
+
+//        $this->enforceSitePermission($site);
+
+        // Get the entry in any but the to-be-deleted site -- preferably one the user has access to edit
+        $fragmentId = $this->request->getBodyParam('sourceId');
+        $editableSiteIds = $sitesService->getEditableSiteIds();
+
+        $query = Fragment::find()
+            ->id($fragmentId)
+            ->siteId(['not', $siteId])
+            ->preferSites($editableSiteIds)
+            ->unique()
+            ->anyStatus();
+
+        $fragment = $query->one();
+        if (!$fragment) {
+            throw new NotFoundHttpException('Fragment not found');
+        }
+
+//        $this->enforceEditEntryPermissions($fragment);
+//        $this->enforceDeleteEntryPermissions($fragment);
+
+        // Delete the row in elements_sites
+        Db::delete(Table::ELEMENTS_SITES, [
+            'elementId' => $fragment->id,
+            'siteId' => $siteId,
+        ]);
+
+        // Resave the fragment
+        $fragment->setScenario(Element::SCENARIO_ESSENTIALS);
+        Craft::$app->getElements()->saveElement($fragment);
+
+        $this->setSuccessFlash(Craft::t('app', 'Fragment deleted for site.'));
+
+        if (!in_array($fragment->siteId, $editableSiteIds)) {
+            // That was the only site they had access to, so send them back to the Entries index
+            return $this->redirect('entries');
+        }
+
+        // Redirect them to the same entry in the fetched site
+        return $this->redirect($fragment->getCpEditUrl());
     }
 
     /**

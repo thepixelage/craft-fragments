@@ -17,8 +17,10 @@
 {% set redirectUrl = "fragments/fragments/#{fragmentType.handle}" %}
 {% set canUpdateSource = true %}
 {% set canDeleteSource = true %}
+{% set canDeleteForSite = true %}
 {% set saveSourceAction = 'fragments/fragments/save' %}
 {% set deleteSourceAction = 'fragments/fragments/delete' %}
+{% set deleteForSiteAction = 'fragments/fragments/delete-for-site' %}
 
 {% set saveSourceAction = saveSourceAction ?? null %}
 {% set duplicateSourceAction = duplicateSourceAction ?? null %}
