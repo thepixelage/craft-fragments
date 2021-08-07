@@ -15,11 +15,12 @@ use craft\services\Fields;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
+use thepixelage\fragments\behaviors\CraftVariableBehavior;
 use thepixelage\fragments\elements\Fragment;
-use thepixelage\fragments\fields\Fragments;
+use thepixelage\fragments\fields\Fragments as FragmentsField;
+use thepixelage\fragments\services\Fragments;
 use thepixelage\fragments\services\FragmentTypes;
 use thepixelage\fragments\services\Zones;
-use thepixelage\fragments\variables\FragmentsVariable;
 use yii\base\Event;
 
 /**
@@ -27,6 +28,7 @@ use yii\base\Event;
  *
  * @package thepixelage\fragments
  *
+ * @property Fragments $fragments
  * @property FragmentTypes $fragmentTypes
  * @property Zones $zones
  *
@@ -79,6 +81,10 @@ class Plugin extends \craft\base\Plugin
                 'label' => Craft::t('fragments', "Settings"),
                 'url' => 'fragments/settings',
             ];
+
+            if (!Plugin::getInstance()->fragments->hasTypesAndZonesSetup()) {
+                unset($subNavs['fragments']);
+            }
         }
 
         return array_merge($navItem, [
@@ -89,6 +95,7 @@ class Plugin extends \craft\base\Plugin
     private function registerServices()
     {
         $this->setComponents([
+            'fragments' => Fragments::class,
             'fragmentTypes' => FragmentTypes::class,
             'zones' => Zones::class,
         ]);
@@ -110,7 +117,7 @@ class Plugin extends \craft\base\Plugin
             Fields::class,
             Fields::EVENT_REGISTER_FIELD_TYPES,
             function(RegisterComponentTypesEvent $event) {
-                $event->types[] = Fragments::class;
+                $event->types[] = FragmentsField::class;
             }
         );
     }
@@ -118,8 +125,11 @@ class Plugin extends \craft\base\Plugin
     private function registerVariables()
     {
         Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function(Event $e) {
+            /** @var CraftVariable $variable */
             $variable = $e->sender;
-            $variable->set('fragments', FragmentsVariable::class);
+            $variable->attachBehaviors([
+                CraftVariableBehavior::class,
+            ]);
         });
     }
 

@@ -22,8 +22,21 @@ use yii\web\Response;
 
 class FragmentsController extends Controller
 {
+    public function actionPluginIndex(): Response
+    {
+        if (Plugin::getInstance()->fragments->hasTypesAndZonesSetup()) {
+            return $this->redirect('fragments/fragments');
+        }
+
+        return $this->redirect('fragments/settings');
+    }
+
     public function actionIndex(): Response
     {
+        if (!Plugin::getInstance()->fragments->hasTypesAndZonesSetup()) {
+            return $this->redirect('fragments/settings');
+        }
+
         $fragmentTypes = array_filter(
             Plugin::getInstance()->fragmentTypes->getAllFragmentTypes(),
             function ($type) {
