@@ -1,47 +1,31 @@
-{% extends '_layouts/cp' %}
-{% import "_includes/forms" as forms %}
+{% extends '@fragments/_layouts/settings.twig' %}
 
-{% set title = 'Create a new zone' %}
-{% if zone is defined and zone %}
-    {% set title = zone.name %}
-{% endif %}
+{% import '_includes/forms' as forms %}
 
-{% set selectedSubnavItem = 'settings' %}
+{% set title = "Edit Zone"|t('fragments') %}
 
 {% set crumbs = [
     {
-        label: 'Fragments'|t('fragments'),
-        url: url('fragments'),
+        label: "Settings"|t('fragments'),
+        url: cpUrl('fragments/settings'),
     },
     {
-        label: 'Settings'|t('fragments'),
-        url: url('fragments/settings'),
-    },
-    {
-        label: 'Zones'|t('fragments'),
-        url: url('fragments/settings/zones'),
+        label: "Zones"|t('fragments'),
+        url: cpUrl('fragments/settings/zones'),
     },
 ] %}
 
 {% set fullPageForm = true %}
-{% set formActions = [
-    zone ?? false ? {
-        label: 'Delete'|t('app'),
-        action: 'fragments/zones/delete-zone',
-        redirect: 'fragments/settings/zones'|hash,
-        destructive: true,
-        confirm: 'Are you sure you want to delete “{name}”?'|t('app', {
-            name: zone.name,
-        }),
-    },
-]|filter %}
+
+{% block sidebar %}{% endblock %}
 
 {% block content %}
-    {{ actionInput('fragments/zones/save-zone') }}
+
+    {{ actionInput('fragments/zones/save') }}
+
     {{ redirectInput('fragments/settings/zones') }}
-    {% if zone is defined and zone %}
-        {{ hiddenInput('id', zone.id) }}
-    {% endif %}
+
+    {% if zone.id %}{{ hiddenInput('zoneId', zone.id) }}{% endif %}
 
     {{ forms.textField({
         first: true,
@@ -49,10 +33,10 @@
         instructions: "What this zone will be called in the control panel."|t('app'),
         id: 'name',
         name: 'name',
-        value: zone is defined ? zone.name,
-        errors: [],
+        value: zone.name,
+        errors: zone.getErrors('name'),
         autofocus: true,
-        required: true
+        required: true,
     }) }}
 
     {{ forms.textField({
@@ -63,12 +47,89 @@
         class: 'code',
         autocorrect: false,
         autocapitalize: false,
-        value: zone is defined ? zone.handle,
-        errors: [],
+        value: zone.handle,
+        errors: zone.getErrors('handle'),
         required: true
     }) }}
+
+    <hr>
+
+    {% set siteRows = [] %}
+    {% set siteErrors = zone.getErrors('siteSettings') %}
+
+    {% for site in craft.app.sites.getAllSites() %}
+        {% set siteSettings = zone.siteSettings[site.id] ?? null %}
+        {% if siteSettings %}
+            {% for attribute, errors in siteSettings.getErrors() %}
+                {% set siteErrors = siteErrors|merge(errors) %}
+            {% endfor %}
+        {% endif %}
+        {% set siteRows = siteRows|merge({
+            (site.handle): {
+                heading: site.name|t('site')|e,
+                enabled: include('_includes/forms/lightswitch.html', {
+                    name: 'sites['~site.handle~'][enabled]',
+                    on: isNew or siteSettings,
+                    value: site.id,
+                    small: true
+                }),
+                enabledByDefault: siteSettings ? siteSettings.enabledByDefault : true,
+            }|filter
+        }) %}
+    {% endfor %}
+
+    {{ forms.editableTableField({
+        label: "Site Settings"|t('app'),
+        instructions: "Choose which sites this zone should be available in, and configure the site-specific settings."|t('app'),
+        id: 'sites',
+        name: 'sites',
+        cols: {
+            heading: {
+                type: 'heading',
+                heading: "Site"|t('app'),
+                thin: true
+            },
+            enabled: {
+                type: 'heading',
+                thin: true,
+                class: not craft.app.getIsMultiSite() ? 'hidden'
+            },
+            enabledByDefault: {
+                type: 'lightswitch',
+                heading: "Default Status"|t('app'),
+                thin: true
+            }
+        }|filter,
+        rows: siteRows,
+        fullWidth: not headlessMode,
+        staticRows: true,
+        errors: siteErrors|unique
+    }) }}
+
+    {% if craft.app.getIsMultiSite() %}
+        <div class="field">
+            {{ forms.selectField({
+                label: 'Propagation Method'|t('app'),
+                instructions: 'Of the enabled sites above, which sites should entries in this zone be saved to?'|t('app'),
+                warning: zone.id and zone.propagationMethod != 'none' and zone.siteSettings|length > 1 ? 'Changing this may result in data loss.'|t('app'),
+                id: 'propagationMethod',
+                name: 'propagationMethod',
+                options: [
+                    { value: 'none', label: 'Only save entries to the site they were created in'|t('app') },
+                    { value: 'siteGroup', label: 'Save entries to other sites in the same site group'|t('app') },
+                    { value: 'language', label: 'Save entries to other sites with the same language'|t('app') },
+                    { value: 'all', label: 'Save entries to all sites enabled for this section'|t('app') },
+                    { value: 'custom', label: 'Let each entry choose which sites it should be saved to'|t('app') },
+                ],
+                value: zone.propagationMethod
+            }) }}
+        </div>
+    {% endif %}
+
 {% endblock %}
 
-{% if zone is not defined or zone.handle is empty %}
-    {% js "new Craft.HandleGenerator('#name', '#handle');" %}
+{% if isNew %}
+    {% js %}
+        new Craft.HandleGenerator('#name', '#handle');
+    {% endjs %}
 {% endif %}

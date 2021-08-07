@@ -5,52 +5,72 @@ namespace thepixelage\fragments\services;
 use Craft;
 use craft\base\Component;
 use craft\db\Query;
-use craft\elements\Entry;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
 use craft\helpers\StringHelper;
 use craft\models\FieldLayout;
-use Exception;
 use thepixelage\fragments\db\Table;
+use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\records\FragmentType as FragmentTypeRecord;
 use Throwable;
+use yii\base\ErrorException;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
+use yii\web\ServerErrorHttpException;
 
+/**
+ *
+ * @property-read array $allFragmentTypes
+ * @property-read int $fragmentTypeCount
+ */
 class FragmentTypes extends Component
 {
     public function getAllFragmentTypes(): array
     {
-        $results = $this->_createFragmentTypesQuery()
-            ->orderBy(['name' => SORT_ASC])
-            ->all();
-
-        foreach ($results as $key => $result) {
-            $results[$key] = new FragmentType($result);
-        }
-
-        return $results;
+        return $this->createFragmentTypesQuery()->all();
     }
 
-    public function getFragmentTypeById($id)
+    public function getFragmentTypeById($id): ?FragmentType
     {
-        $result = $this->_createFragmentTypesQuery()
+        $result = $this->createFragmentTypesQuery()
             ->where(['id' => $id])
             ->one();
 
         return $result ? new FragmentType($result) : null;
     }
 
-    public function getFragmentTypeByUid($uid)
+    public function getFragmentTypeByUid($uid): ?FragmentType
     {
-        $result = $this->_createFragmentTypesQuery()
+        $result = $this->createFragmentTypesQuery()
             ->where(['uid' => $uid])
             ->one();
 
         return $result ? new FragmentType($result) : null;
     }
 
+    public function getFragmentTypeByHandle($handle): ?FragmentType
+    {
+        $result = $this->createFragmentTypesQuery()
+            ->where(['handle' => $handle])
+            ->one();
+
+        return $result ? new FragmentType($result) : null;
+    }
+
+    public function getFragmentTypeCount(): int
+    {
+        return $this->createFragmentTypesQuery()->count();
+    }
+
     /**
+     * @throws NotSupportedException
+     * @throws InvalidConfigException
      * @throws Exception
+     * @throws ErrorException
+     * @throws ServerErrorHttpException
+     * @throws \Exception
      */
     public function saveFragmentType(FragmentType $fragmentType): bool
     {
@@ -76,7 +96,7 @@ class FragmentTypes extends Component
             ($fieldLayoutConfig = $fieldLayout->getConfig())
         ) {
             if (!$fieldLayout->uid) {
-                $fieldLayout->uid = $fieldLayout->id ? Db::uidById(\craft\db\Table::FIELDLAYOUTS, $fieldLayout->id) : StringHelper::UUID();
+                $fieldLayout->uid = $fieldLayout->id ? Db::uidById(Table::FIELDLAYOUTS, $fieldLayout->id) : StringHelper::UUID();
             }
             $config['fieldLayouts'] = [
                 $fieldLayout->uid => $fieldLayoutConfig,
@@ -101,19 +121,8 @@ class FragmentTypes extends Component
         return true;
     }
 
-    public function deleteFragmentTypeById($id): bool
-    {
-        $fragmentType = $this->getFragmentTypeById($id);
-
-        if (!$fragmentType) {
-            return false;
-        }
-
-        return $this->deleteFragmentType($fragmentType);
-    }
-
     /**
-     * @throws Exception
+     * @throws \yii\db\Exception|Exception
      * @throws Throwable
      */
     public function handleChangedFragmentType(ConfigEvent $event)
@@ -123,24 +132,24 @@ class FragmentTypes extends Component
 
         $transaction = Craft::$app->getDb()->beginTransaction();
         try {
-            $typeRecord = $this->_getFragmentTypeRecord($uid);
-            $typeRecord->name = $data['name'];
-            $typeRecord->handle = $data['handle'];
-            $typeRecord->uid = $uid;
+            $record = $this->getFragmentTypeRecord($uid);
+            $record->name = $data['name'];
+            $record->handle = $data['handle'];
+            $record->uid = $uid;
 
             if (!empty($data['fieldLayouts'])) {
                 $layout = FieldLayout::createFromConfig(reset($data['fieldLayouts']));
-                $layout->id = $typeRecord->fieldLayoutId;
-                $layout->type = Entry::class;
+                $layout->id = $record->fieldLayoutId;
+                $layout->type = Fragment::class;
                 $layout->uid = key($data['fieldLayouts']);
                 Craft::$app->getFields()->saveLayout($layout);
-                $typeRecord->fieldLayoutId = $layout->id;
-            } else if ($typeRecord->fieldLayoutId) {
-                Craft::$app->getFields()->deleteLayoutById($typeRecord->fieldLayoutId);
-                $typeRecord->fieldLayoutId = null;
+                $record->fieldLayoutId = $layout->id;
+            } else if ($record->fieldLayoutId) {
+                Craft::$app->getFields()->deleteLayoutById($record->fieldLayoutId);
+                $record->fieldLayoutId = null;
             }
 
-            $typeRecord->save(false);
+            $record->save(false);
             $transaction->commit();
         } catch (Throwable $e) {
             $transaction->rollBack();
@@ -154,17 +163,17 @@ class FragmentTypes extends Component
     public function handleDeletedFragmentType(ConfigEvent $event)
     {
         $uid = $event->tokenMatches[0];
-        $zone = $this->getFragmentTypeByUid($uid);
-        if (!$zone) {
+        $fragmentType = $this->getFragmentTypeByUid($uid);
+        if (!$fragmentType) {
             return;
         }
 
         Craft::$app->db->createCommand()
-            ->delete(Table::FRAGMENTTYPES, ['id' => $zone->id])
+            ->delete(Table::FRAGMENTTYPES, ['id' => $fragmentType->id])
             ->execute();
     }
 
-    private function _createFragmentTypesQuery(): Query
+    private function createFragmentTypesQuery(): Query
     {
         return (new Query())
             ->select([
@@ -177,9 +186,10 @@ class FragmentTypes extends Component
             ->from([Table::FRAGMENTTYPES]);
     }
 
-    private function _getFragmentTypeRecord(string $uid): FragmentTypeRecord
+    private function getFragmentTypeRecord(string $uid): FragmentTypeRecord
     {
         $query = FragmentTypeRecord::find()->andWhere(['uid' => $uid]);
+
         return $query->one() ?? new FragmentTypeRecord();
     }
 }

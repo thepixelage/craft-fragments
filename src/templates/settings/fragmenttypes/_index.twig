@@ -1,0 +1,51 @@
+{% extends '@fragments/_layouts/settings.twig' %}
+
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
+
+{% do view.registerTranslations('fragments', [
+    "Name",
+    "Handle",
+    "No fragment types exist yet.",
+]) %}
+
+{% set selectedSidebarNavItem = 'types' %}
+
+{% block actionButton %}
+    <a href="{{ cpUrl('fragments/settings/fragmenttypes/new') }}" class="btn submit add icon">{{ "New fragment type"|t('fragments') }}</a>
+{% endblock %}
+
+{% block content %}
+    <div id="fragmenttypes-vue-admin-table"></div>
+{% endblock %}
+
+{% set tableData = [] %}
+{% for type in types %}
+    {% set tableData = tableData|merge([{
+        id: type.id,
+        title: type.name|t('site'),
+        url: url('fragments/settings/fragmenttypes/' ~ type.id),
+        name: type.name|t('site')|e,
+        handle: type.handle,
+    }]) %}
+{% endfor %}
+
+{% js %}
+    var columns = [
+        {
+            name: '__slot:title',
+            title: Craft.t('app', 'Name'),
+        },
+        {
+            name: '__slot:handle',
+            title: Craft.t('app', 'Handle'),
+        },
+    ];
+
+    new Craft.VueAdminTable({
+        columns: columns,
+        container: '#fragmenttypes-vue-admin-table',
+        deleteAction: 'fragments/fragment-types/delete',
+        emptyMessage: Craft.t('app', 'No fragment types exist yet.'),
+        tableData: {{ tableData|json_encode|raw }}
+    });
+{% endjs %}

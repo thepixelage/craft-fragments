@@ -1,1 +1,7 @@
-{% redirect 'fragments/fragments' %}
+{% if craft.fragments.zones.getZoneCount() > 0 %}
+
+    {% redirect cpUrl('fragments/fragments') %}
+
+{% endif %}
+
+{% redirect cpUrl('fragments/settings') %}

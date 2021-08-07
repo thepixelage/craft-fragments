@@ -3,58 +3,67 @@
 namespace thepixelage\fragments\controllers;
 
 use Craft;
-use craft\errors\MissingComponentException;
 use craft\web\Controller;
-use craft\web\View;
-use Exception;
 use thepixelage\fragments\models\Zone;
+use thepixelage\fragments\models\Zone_SiteSettings;
 use thepixelage\fragments\Plugin;
-use thepixelage\fragments\services\Zones;
-use Throwable;
+use yii\base\ErrorException;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
 use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 use yii\web\ServerErrorHttpException;
 
 class ZonesController extends Controller
 {
-    /** @var Zones $zonesService */
-    protected $zonesService;
-
-    public function __construct($id, $module, $config = [])
+    public function actionIndex(): Response
     {
-        parent::__construct($id, $module, $config);
-
-        $this->zonesService = Plugin::$plugin->zones;
-    }
-
-    public function actionCreate(): Response
-    {
-        return $this->renderTemplate('fragments/settings/zones/_edit', [], View::TEMPLATE_MODE_CP);
-    }
-
-    public function actionUpdate($id): Response
-    {
-        $zone = $this->zonesService->getZoneById($id);
-        $variables = [
-            'zone' => $zone,
-        ];
-
-        return $this->renderTemplate('fragments/settings/zones/_edit', $variables, View::TEMPLATE_MODE_CP);
+        return $this->renderTemplate('@fragments/settings/zones/_index.twig', [
+            'zones' => Plugin::getInstance()->zones->getAllZones(),
+        ]);
     }
 
     /**
      * @throws BadRequestHttpException
-     * @throws Exception
      */
-    public function actionSaveZone()
+    public function actionEdit(?int $zoneId = null, ?Zone $zone = null): Response
     {
-        $this->requirePostRequest();
+        if (!$zone) {
+            if ($zoneId) {
+                $zone = Plugin::getInstance()->zones->getZoneById($zoneId);
+                if (!$zone) {
+                    throw new BadRequestHttpException("Invalid zone ID: $zoneId");
+                }
+            } else {
+                $zone = new Zone();
+            }
+        }
 
-        $zoneId = $this->request->getBodyParam('id');
+        return $this->renderTemplate('@fragments/settings/zones/_edit.twig', [
+            'zone' => $zone,
+            'isNew' => ($zone->id == null),
+            'headlessMode' => true,
+        ]);
+    }
+
+    /**
+     * @throws NotSupportedException
+     * @throws InvalidConfigException
+     * @throws ErrorException
+     * @throws Exception
+     * @throws ServerErrorHttpException
+     * @throws BadRequestHttpException
+     */
+    public function actionSave(): ?Response
+    {
+        $zoneId = $this->request->getBodyParam('zoneId');
+
         if ($zoneId) {
-            $zone = $this->zonesService->getZoneById($zoneId);
+            $zone = Plugin::getInstance()->zones->getZoneById($zoneId);
             if (!$zone) {
-                throw new BadRequestHttpException('Zone not found');
+                throw new BadRequestHttpException("Invalid zone ID: $zoneId");
             }
         } else {
             $zone = new Zone();
@@ -62,55 +71,70 @@ class ZonesController extends Controller
 
         $zone->name = $this->request->getBodyParam('name');
         $zone->handle = $this->request->getBodyParam('handle');
+        $zone->enableVersioning = $this->request->getBodyParam('enableVersioning', true);
+        $zone->propagationMethod = $this->request->getBodyParam('propagationMethod', Zone::PROPAGATION_METHOD_ALL);
+        $zone->maxLevels = 1;
 
-        // Did it save?
-        if (!$this->zonesService->saveZone($zone)) {
-            $this->setFailFlash(Craft::t('app', 'Couldn’t save zone.'));
+        // Site-specific settings
+        $allSiteSettings = [];
 
-            // Send the group back to the template
-            Craft::$app->getUrlManager()->setRouteParams([
+        foreach (Craft::$app->getSites()->getAllSites() as $site) {
+            $postedSettings = $this->request->getBodyParam('sites.' . $site->handle);
+
+            // Skip disabled sites if this is a multi-site install
+            if (Craft::$app->getIsMultiSite() && empty($postedSettings['enabled'])) {
+                continue;
+            }
+
+            $siteSettings = new Zone_SiteSettings();
+            $siteSettings->siteId = $site->id;
+            $siteSettings->enabledByDefault = (bool)$postedSettings['enabledByDefault'];
+
+            $allSiteSettings[$site->id] = $siteSettings;
+        }
+
+        $zone->setSiteSettings($allSiteSettings);
+
+        /** @noinspection PhpUnhandledExceptionInspection */
+        if (!Plugin::getInstance()->zones->saveZone($zone)) {
+            if ($this->request->getAcceptsJson()) {
+                return $this->asJson(['errors' => $zone->getErrors()]);
+            }
+
+            $this->setFailFlash(Craft::t('fragments', "Couldn’t save zone."));
+
+            Craft::$app->urlManager->setRouteParams([
                 'zone' => $zone,
             ]);
 
             return null;
         }
 
-        $this->setSuccessFlash(Craft::t('app', 'Zone saved.'));
+        if ($this->request->getAcceptsJson()) {
+            return $this->asJson(['success' => true]);
+        }
 
-        return $this->redirectToPostedUrl($zone);
+        $this->setSuccessFlash(Craft::t('fragments', "Zone saved."));
+        $this->redirectToPostedUrl($zone);
+
+        return null;
     }
 
     /**
-     * @throws Throwable
-     * @throws MissingComponentException
+     * @throws ForbiddenHttpException
      * @throws BadRequestHttpException
-     * @throws ServerErrorHttpException
      */
-    public function actionDeleteZone(): Response
+    public function actionDelete(): Response
     {
         $this->requirePostRequest();
+        $this->requireAcceptsJson();
+        $this->requireAdmin();
 
-        $zoneId = $this->request->getBodyParam('zoneId') ?? $this->request->getRequiredBodyParam('id');
-        $zone = $this->zonesService->getZoneById($zoneId);
+        $zonesService = Plugin::getInstance()->zones;
+        $zoneId = $this->request->getRequiredBodyParam('id');
+        $zone = $zonesService->getZoneById($zoneId);
+        $zonesService->deleteZone($zone);
 
-        if (!$zone) {
-            throw new BadRequestHttpException("Invalid zone ID: $zoneId");
-        }
-
-        $success = $this->zonesService->deleteZone($zone);
-
-        if ($this->request->getAcceptsJson()) {
-            return $this->asJson(['success' => $success]);
-        }
-
-        if (!$success) {
-            throw new ServerErrorHttpException("Unable to delete zone ID $zoneId");
-        }
-
-        Craft::$app->getSession()->setNotice(Craft::t('app', '“{name}” deleted.', [
-            'name' => $zone->name,
-        ]));
-
-        return $this->redirectToPostedUrl();
+        return $this->asJson(['success' => true]);
     }
 }

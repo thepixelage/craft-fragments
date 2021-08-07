@@ -2,60 +2,97 @@
 
 namespace thepixelage\fragments;
 
-
 use Craft;
+use craft\events\DefineFieldLayoutFieldsEvent;
 use craft\events\RegisterComponentTypesEvent;
-use craft\events\RegisterCpNavItemsEvent;
+use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\fieldlayoutelements\TitleField;
 use craft\helpers\UrlHelper;
+use craft\models\FieldLayout;
 use craft\services\Elements;
-use craft\web\twig\variables\Cp;
+use craft\services\Fields;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
+use craft\web\View;
+use thepixelage\fragments\behaviors\CraftVariableBehavior;
 use thepixelage\fragments\elements\Fragment;
+use thepixelage\fragments\fields\Fragments as FragmentsField;
 use thepixelage\fragments\services\Fragments;
 use thepixelage\fragments\services\FragmentTypes;
 use thepixelage\fragments\services\Zones;
-use thepixelage\fragments\variables\FragmentsVariable;
 use yii\base\Event;
 
 /**
  * Class Plugin
  *
- * @author    ThePixelAge
- * @package   fragments
+ * @package thepixelage\fragments
  *
+ * @property Fragments $fragments
  * @property FragmentTypes $fragmentTypes
  * @property Zones $zones
  *
+ * @property-read null|array $cpNavItem
+ * @property-read mixed $settingsResponse
  */
 class Plugin extends \craft\base\Plugin
 {
-    public static $plugin;
+    public static Plugin $plugin;
 
     public $schemaVersion = '1.0.0';
     public $hasCpSettings = true;
-    public $hasCpSection = false;
+    public $hasCpSection = true;
 
     public function init()
     {
         parent::init();
+
         self::$plugin = $this;
 
-        $this->_registerComponents();
-        $this->_registerEventListeners();
-        $this->_registerProjectConfigChangeListeners();
-        $this->_registerCpRoutes();
-        $this->_registerVariables();
+        $this->registerServices();
+        $this->registerElementTypes();
+        $this->registerFieldTypes();
+        $this->registerVariables();
+        $this->registerTemplateRoot();
+        $this->registerCpRoutes();
+        $this->registerProjectConfigChangeListeners();
+        $this->registerFieldLayoutStandardFields();
     }
 
     public function getSettingsResponse()
     {
-        $url = UrlHelper::cpUrl('fragments/settings');
-        return Craft::$app->controller->redirect($url);
+        return Craft::$app->controller->redirect(UrlHelper::cpUrl('fragments/settings'));
     }
 
-    private function _registerComponents()
+    public function getCpNavItem(): ?array
+    {
+        $subNavs = [];
+        $navItem = parent::getCpNavItem();
+        $currentUser = Craft::$app->getUser()->getIdentity();
+        $generalConfig = Craft::$app->getConfig()->getGeneral();
+
+        if ($generalConfig->allowAdminChanges && $currentUser->admin) {
+            $subNavs['fragments'] = [
+                'label' => Craft::t('fragments', "Fragments"),
+                'url' => 'fragments/fragments',
+            ];
+
+            $subNavs['settings'] = [
+                'label' => Craft::t('fragments', "Settings"),
+                'url' => 'fragments/settings',
+            ];
+
+            if (!Plugin::getInstance()->fragments->hasTypesAndZonesSetup()) {
+                unset($subNavs['fragments']);
+            }
+        }
+
+        return array_merge($navItem, [
+            'subnav' => $subNavs,
+        ]);
+    }
+
+    private function registerServices()
     {
         $this->setComponents([
             'fragments' => Fragments::class,
@@ -64,7 +101,7 @@ class Plugin extends \craft\base\Plugin
         ]);
     }
 
-    private function _registerEventListeners()
+    private function registerElementTypes()
     {
         Event::on(Elements::class,
             Elements::EVENT_REGISTER_ELEMENT_TYPES,
@@ -72,31 +109,50 @@ class Plugin extends \craft\base\Plugin
                 $event->types[] = Fragment::class;
             }
         );
+    }
 
+    private function registerFieldTypes()
+    {
         Event::on(
-            Cp::class,
-            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-            function(RegisterCpNavItemsEvent $event) {
-                $fragmentNavItems = [
-                    'url' => 'fragments',
-                    'label' => 'Fragments',
-                    'icon' => '@thepixelage/fragments/icon.svg',
-                    'subnav' => [
-                        'fragments' => ['label' => 'Fragments', 'url' => 'fragments'],
-                        'zones' => ['label' => 'Zones', 'url' => 'fragments/zones'],
-                    ],
-                ];
-
-                if (Craft::$app->config->general->allowAdminChanges) {
-                    $fragmentNavItems['subnav']['settings'] = ['label' => 'Settings', 'url' => 'settings/plugins/fragments'];
-                }
-
-                $event->navItems[] = $fragmentNavItems;
+            Fields::class,
+            Fields::EVENT_REGISTER_FIELD_TYPES,
+            function(RegisterComponentTypesEvent $event) {
+                $event->types[] = FragmentsField::class;
             }
         );
     }
 
-    private function _registerProjectConfigChangeListeners()
+    private function registerVariables()
+    {
+        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function(Event $e) {
+            /** @var CraftVariable $variable */
+            $variable = $e->sender;
+            $variable->attachBehaviors([
+                CraftVariableBehavior::class,
+            ]);
+        });
+    }
+
+    private function registerCpRoutes()
+    {
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
+            $rules = include __DIR__ . '/config/routes.php';
+            $event->rules = array_merge($event->rules, $rules);
+        });
+    }
+
+    private function registerTemplateRoot()
+    {
+        Event::on(
+            View::class,
+            View::EVENT_REGISTER_CP_TEMPLATE_ROOTS,
+            function(RegisterTemplateRootsEvent $event) {
+                $event->roots['@fragments'] = __DIR__ . '/templates/';
+            }
+        );
+    }
+
+    private function registerProjectConfigChangeListeners()
     {
         Craft::$app->projectConfig
             ->onAdd('fragmentZones.{uid}', [$this->zones, 'handleChangedZone'])
@@ -107,19 +163,15 @@ class Plugin extends \craft\base\Plugin
             ->onRemove('fragmentTypes.{uid}', [$this->fragmentTypes, 'handleDeletedFragmentType']);
     }
 
-    private function _registerCpRoutes()
+    private function registerFieldLayoutStandardFields()
     {
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
-            $rules = include __DIR__ . '/config/routes.php';
-            $event->rules = array_merge($event->rules, $rules);
-        });
-    }
+        Event::on(FieldLayout::class, FieldLayout::EVENT_DEFINE_STANDARD_FIELDS, function(DefineFieldLayoutFieldsEvent $event) {
+            /* @var FieldLayout $fieldLayout */
+            $fieldLayout = $event->sender;
 
-    private function _registerVariables()
-    {
-        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function(Event $e) {
-            $variable = $e->sender;
-            $variable->set('fragments', FragmentsVariable::class);
+            if ($fieldLayout->type == Fragment::class) {
+                $event->fields[] = TitleField::class;
+            }
         });
     }
 }

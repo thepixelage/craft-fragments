@@ -1,47 +1,31 @@
-{% extends '_layouts/cp' %}
-{% import "_includes/forms" as forms %}
+{% extends '@fragments/_layouts/settings.twig' %}
 
-{% set title = 'Create a new fragment type' %}
-{% if fragmentType is defined and fragmentType %}
-    {% set title = fragmentType.name %}
-{% endif %}
+{% import '_includes/forms' as forms %}
 
-{% set selectedSubnavItem = 'settings' %}
+{% set title = "Edit Fragment Type"|t('fragments') %}
 
 {% set crumbs = [
     {
-        label: 'Fragments'|t('fragments'),
-        url: url('fragments'),
+        label: "Settings"|t('fragments'),
+        url: cpUrl('fragments/settings'),
     },
     {
-        label: 'Settings'|t('fragments'),
-        url: url('fragments/settings'),
-    },
-    {
-        label: 'Fragment Types'|t('fragments'),
-        url: url('fragments/settings/fragmenttypes'),
+        label: "Fragment Types"|t('fragments'),
+        url: cpUrl('fragments/settings/fragmenttypes'),
     },
 ] %}
 
 {% set fullPageForm = true %}
-{% set formActions = [
-    fragmentType ?? false ? {
-        label: 'Delete'|t('app'),
-        action: 'fragments/fragment-types/delete-fragment-type',
-        redirect: 'fragments/settings/fragmenttypes'|hash,
-        destructive: true,
-        confirm: 'Are you sure you want to delete “{name}”?'|t('app', {
-            name: fragmentType.name,
-        }),
-    },
-]|filter %}
+
+{% block sidebar %}{% endblock %}
 
 {% block content %}
-    {{ actionInput('fragments/fragment-types/save-fragment-type') }}
+
+    {{ actionInput('fragments/fragment-types/save') }}
+
     {{ redirectInput('fragments/settings/fragmenttypes') }}
-    {% if fragmentType is defined and fragmentType %}
-        {{ hiddenInput('id', fragmentType.id) }}
-    {% endif %}
+
+    {% if fragmentType.id %}{{ hiddenInput('fragmentTypeId', fragmentType.id) }}{% endif %}
 
     {{ forms.textField({
         first: true,
@@ -49,10 +33,10 @@
         instructions: "What this fragment type will be called in the control panel."|t('app'),
         id: 'name',
         name: 'name',
-        value: fragmentType is defined ? fragmentType.name,
-        errors: [],
+        value: fragmentType.name,
+        errors: fragmentType.getErrors('name'),
         autofocus: true,
-        required: true
+        required: true,
     }) }}
 
     {{ forms.textField({
@@ -63,18 +47,19 @@
         class: 'code',
         autocorrect: false,
         autocapitalize: false,
-        value: fragmentType is defined ? fragmentType.handle,
-        errors: [],
+        value: fragmentType.handle,
+        errors: fragmentType.getErrors('handle'),
         required: true
     }) }}
 
-    <hr>
-
     {{ forms.fieldLayoutDesignerField({
-        fieldLayout: fragmentType is defined ? fragmentType.getFieldLayout() : null
+        fieldLayout: fragmentType.getFieldLayout(),
     }) }}
+
 {% endblock %}
 
-{% if fragmentType is not defined or fragmentType.handle is empty %}
-    {% js "new Craft.HandleGenerator('#name', '#handle');" %}
+{% if isNew %}
+    {% js %}
+        new Craft.HandleGenerator('#name', '#handle');
+    {% endjs %}
 {% endif %}

@@ -3,59 +3,74 @@
 namespace thepixelage\fragments\controllers;
 
 use Craft;
-use craft\elements\Entry;
-use craft\errors\MissingComponentException;
 use craft\web\Controller;
-use craft\web\View;
-use Exception;
+use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\Plugin;
-use thepixelage\fragments\services\FragmentTypes;
-use Throwable;
+use yii\base\ErrorException;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
 use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 use yii\web\ServerErrorHttpException;
 
 class FragmentTypesController extends Controller
 {
-    /** @var FragmentTypes $fragmentTypesService */
-    protected $fragmentTypesService;
-
-    public function __construct($id, $module, $config = [])
+    /**
+     * @throws ForbiddenHttpException
+     */
+    public function actionIndex(): Response
     {
-        parent::__construct($id, $module, $config);
+        $this->requireAdmin();
 
-        $this->fragmentTypesService = Plugin::$plugin->fragmentTypes;
-    }
-
-    public function actionCreate(): Response
-    {
-        return $this->renderTemplate('fragments/settings/fragmenttypes/_edit', [], View::TEMPLATE_MODE_CP);
-    }
-
-    public function actionUpdate($id): Response
-    {
-        $fragmentType = $this->fragmentTypesService->getFragmentTypeById($id);
-        $variables = [
-            'fragmentType' => $fragmentType,
-        ];
-
-        return $this->renderTemplate('fragments/settings/fragmenttypes/_edit', $variables, View::TEMPLATE_MODE_CP);
+        return $this->renderTemplate('@fragments/settings/fragmenttypes/_index.twig', [
+            'types' => Plugin::getInstance()->fragmentTypes->getAllFragmentTypes(),
+        ]);
     }
 
     /**
      * @throws BadRequestHttpException
-     * @throws Exception
+     * @throws ForbiddenHttpException
      */
-    public function actionSaveFragmentType()
+    public function actionEdit(?int $fragmentTypeId = null, ?FragmentType $fragmentType = null): Response
     {
-        $this->requirePostRequest();
+        $this->requireAdmin();
 
-        $fragmentTypeId = $this->request->getBodyParam('id');
+        if (!$fragmentType) {
+            if ($fragmentTypeId) {
+                $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
+                if (!$fragmentType) {
+                    throw new BadRequestHttpException("Invalid fragment type ID: $fragmentTypeId");
+                }
+            } else {
+                $fragmentType = new FragmentType();
+            }
+        }
+
+        return $this->renderTemplate('@fragments/settings/fragmenttypes/_edit.twig', [
+            'fragmentType' => $fragmentType,
+            'isNew' => ($fragmentType->id == null),
+        ]);
+    }
+
+    /**
+     * @throws NotSupportedException
+     * @throws InvalidConfigException
+     * @throws ErrorException
+     * @throws Exception
+     * @throws ServerErrorHttpException
+     * @throws BadRequestHttpException
+     */
+    public function actionSave(): ?Response
+    {
+        $fragmentTypeId = $this->request->getBodyParam('fragmentTypeId');
+
         if ($fragmentTypeId) {
-            $fragmentType = $this->fragmentTypesService->getFragmentTypeById($fragmentTypeId);
+            $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
             if (!$fragmentType) {
-                throw new BadRequestHttpException('Fragment type not found');
+                throw new BadRequestHttpException("Invalid fragment type ID: $fragmentTypeId");
             }
         } else {
             $fragmentType = new FragmentType();
@@ -65,59 +80,51 @@ class FragmentTypesController extends Controller
         $fragmentType->handle = $this->request->getBodyParam('handle');
 
         $fieldLayout = Craft::$app->getFields()->assembleLayoutFromPost();
-        $fieldLayout->type = Entry::class;
+        $fieldLayout->type = Fragment::class;
         $fragmentType->setFieldLayout($fieldLayout);
 
-        if (!$this->fragmentTypesService->saveFragmentType($fragmentType)) {
-            $this->setFailFlash(Craft::t('app', 'Couldn’t save fragment type.'));
+        /** @noinspection PhpUnhandledExceptionInspection */
+        if (!Plugin::getInstance()->fragmentTypes->saveFragmentType($fragmentType)) {
+            if ($this->request->getAcceptsJson()) {
+                return $this->asJson(['errors' => $fragmentType->getErrors()]);
+            }
 
-            Craft::$app->getUrlManager()->setRouteParams([
+            $this->setFailFlash(Craft::t('fragments', "Couldn’t save fragment type."));
+
+            Craft::$app->urlManager->setRouteParams([
                 'fragmentType' => $fragmentType,
             ]);
 
             return null;
         }
 
-        $this->setSuccessFlash(Craft::t('app', 'Fragment type saved.'));
+        Craft::$app->fields->saveLayout($fieldLayout);
 
-        return $this->redirectToPostedUrl($fragmentType);
+        if ($this->request->getAcceptsJson()) {
+            return $this->asJson(['success' => true]);
+        }
+
+        $this->setSuccessFlash(Craft::t('fragments', "Fragment type saved."));
+        $this->redirectToPostedUrl($fragmentType);
+
+        return null;
     }
 
     /**
-     * @throws Throwable
-     * @throws MissingComponentException
+     * @throws ForbiddenHttpException
      * @throws BadRequestHttpException
-     * @throws ServerErrorHttpException
      */
-    public function actionDeleteFragmentType(): Response
+    public function actionDelete(): Response
     {
         $this->requirePostRequest();
+        $this->requireAcceptsJson();
+        $this->requireAdmin();
 
-        $fragmentTypeId = $this->request->getBodyParam('fragmentTypeId') ?? $this->request->getRequiredBodyParam('id');
-        $fragmentType = $this->fragmentTypesService->getFragmentTypeById($fragmentTypeId);
+        $fragmentTypesService = Plugin::getInstance()->fragmentTypes;
+        $fragmentTypeId = $this->request->getRequiredBodyParam('id');
+        $fragmentType = $fragmentTypesService->getFragmentTypeById($fragmentTypeId);
+        $fragmentTypesService->deleteFragmentType($fragmentType);
 
-        if (!$fragmentType) {
-            throw new BadRequestHttpException("Invalid zone ID: $fragmentTypeId");
-        }
-
-        if ($fieldLayout = $fragmentType->getFieldLayout()) {
-            Craft::$app->getFields()->deleteLayout($fieldLayout);
-        }
-
-        $success = $this->fragmentTypesService->deleteFragmentType($fragmentType);
-
-        if ($this->request->getAcceptsJson()) {
-            return $this->asJson(['success' => $success]);
-        }
-
-        if (!$success) {
-            throw new ServerErrorHttpException("Unable to delete fragment type ID $fragmentTypeId");
-        }
-
-        Craft::$app->getSession()->setNotice(Craft::t('app', '“{name}” deleted.', [
-            'name' => $fragmentType->name,
-        ]));
-
-        return $this->redirectToPostedUrl();
+        return $this->asJson(['success' => true]);
     }
 }

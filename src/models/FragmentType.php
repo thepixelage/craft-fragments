@@ -2,62 +2,77 @@
 
 namespace thepixelage\fragments\models;
 
-use craft\base\SavableComponent;
+use craft\base\Model;
 use craft\behaviors\FieldLayoutBehavior;
-use craft\elements\Entry;
+use craft\db\Table;
+use craft\helpers\Db;
+use craft\helpers\StringHelper;
 use craft\models\FieldLayout;
-use yii\base\InvalidConfigException;
+use craft\validators\HandleValidator;
+use craft\validators\UniqueValidator;
+use Exception;
+use thepixelage\fragments\elements\Fragment;
+use thepixelage\fragments\records\FragmentType as FragmentTypeRecord;
 
 /**
- * @mixin FieldLayoutBehavior
+ *
+ * @property-read mixed $fieldLayout
+ * @property-read array $config
+ * @method FieldLayout getFieldLayout
+ * @method setFieldLayout($fieldLayout)
  */
-
-class FragmentType extends SavableComponent
+class FragmentType extends Model
 {
-    /**
-     * @var int|null ID
-     */
-    public $id;
-
-    /**
-     * @var string|null Name
-     */
-    public $name;
-
-    /**
-     * @var string|null Handle
-     */
-    public $handle;
-
-    /**
-     * @var string UID
-     */
-    public $uid;
-
-    /**
-     * @var int|null Field layout ID
-     */
-    public $fieldLayoutId;
+    public ?int $id = null;
+    public ?string $name = null;
+    public ?string $handle = null;
+    public ?string $uid = null;
+    public ?int $fieldLayoutId = null;
 
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
-            'elementType' => Entry::class,
+            'elementType' => Fragment::class,
         ];
 
         return $behaviors;
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws Exception
      */
-    public function getFieldLayout(): FieldLayout
+    public function getConfig(): array
     {
-        /* @var FieldLayoutBehavior $behavior */
-        $behavior = $this->getBehavior('fieldLayout');
+        $config = [
+            'name' => $this->name,
+            'handle' => $this->handle,
+        ];
 
-        return $behavior->getFieldLayout();
+        $fieldLayout = $this->getFieldLayout();
+
+        if ($fieldLayoutConfig = $fieldLayout->getConfig()) {
+            if (!$fieldLayout->uid) {
+                $fieldLayout->uid = $fieldLayout->id ? Db::uidById(Table::FIELDLAYOUTS, $fieldLayout->id) : StringHelper::UUID();
+            }
+            $config['fieldLayouts'] = [
+                $fieldLayout->uid => $fieldLayoutConfig,
+            ];
+        }
+
+        return $config;
+    }
+
+    protected function defineRules(): array
+    {
+        $rules = parent::defineRules();
+        $rules[] = [['id', 'fieldLayoutId'], 'number', 'integerOnly' => true];
+        $rules[] = [['handle'], HandleValidator::class, 'reservedWords' => ['id', 'dateCreated', 'dateUpdated', 'uid', 'title']];
+        $rules[] = [['name', 'handle'], UniqueValidator::class, 'targetClass' => FragmentTypeRecord::class];
+        $rules[] = [['name', 'handle'], 'required'];
+        $rules[] = [['name', 'handle'], 'string', 'max' => 255];
+
+        return $rules;
     }
 }

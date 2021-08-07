@@ -1,0 +1,8 @@
+{% extends '_layouts/cp.html' %}
+
+{% set crumbs = [
+    {
+        label: "Fragments"|t('fragments'),
+        url: cpUrl('fragments'),
+    },
+]|merge((crumbs is defined ? crumbs : [])) %}

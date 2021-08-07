@@ -1,0 +1,15 @@
+{% set selectedSidebarNavItem = selectedSidebarNavItem is defined ? selectedSidebarNavItem : '' %}
+<nav>
+    <ul>
+        <li>
+            <a href="{{ cpUrl('fragments/settings/fragmenttypes') }}" class="{{ selectedSidebarNavItem == 'types' ? 'sel' : '' }}">
+                {{ "Fragment Types"|t('fragments') }}
+            </a>
+        </li>
+        <li>
+            <a href="{{ cpUrl('fragments/settings/zones') }}" class="{{ selectedSidebarNavItem == 'zones' ? 'sel' : '' }}">
+                {{ "Zones"|t('fragments') }}
+            </a>
+        </li>
+    </ul>
+</nav>

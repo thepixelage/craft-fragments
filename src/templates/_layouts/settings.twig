@@ -1,5 +1,11 @@
-{% extends '_layouts/cp' %}
+{% extends '@fragments/_layouts/base.twig' %}
+
+{% set title = "Settings"|t('fragments') %}
+{% set selectedSubnavItem = 'settings' %}
+{% set selectedSidebarNavItem = (selectedSidebarNavItem is defined) ? selectedSidebarNavItem : 'settings' %}
 
 {% block sidebar %}
-    {% include 'fragments/_includes/settingsnav' %}
+    {{ include('@fragments/_includes/sidebar/settings.twig', {
+        selectedSidebarNavItem: selectedSidebarNavItem
+    }) }}
 {% endblock %}
