@@ -13,9 +13,6 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
     init: function(elementType, $container, settings) {
         this.on('selectSource', $.proxy(this, 'updateButton'));
         this.on('selectSite', $.proxy(this, 'updateButton'));
-
-        this.fragmentTypes = Craft.fragmentTypes;
-
         this.base(elementType, $container, settings);
     },
 
@@ -28,6 +25,8 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
         var selectedSourceHandle = this.$source.data('handle');
 
         var i, href, label;
+
+        this.fragmentTypes = Craft.fragmentTypes[this.$source.data('key')];
 
         // Update the New Fragment button
         // ---------------------------------------------------------------------

@@ -7,6 +7,7 @@ use craft\base\Model;
 use craft\db\Query;
 use craft\helpers\ArrayHelper;
 use craft\helpers\Db;
+use craft\helpers\ProjectConfig as ProjectConfigHelper;
 use craft\helpers\StringHelper;
 use craft\validators\HandleValidator;
 use craft\validators\UniqueValidator;
@@ -16,6 +17,7 @@ use thepixelage\fragments\records\Zone as ZoneRecord;
 
 /**
  *
+ * @property-read array $config
  * @property-read int[] $siteIds
  */
 class Zone extends Model
@@ -35,6 +37,7 @@ class Zone extends Model
     public ?bool $enableVersioning = true;
     public ?string $propagationMethod = self::PROPAGATION_METHOD_ALL;
     public ?bool $propagateEntries = true;
+    public ?array $settings = null;
 
     /** @var Zone_SiteSettings[]|null */
     private ?array $siteSettings = null;
@@ -101,6 +104,7 @@ class Zone extends Model
             ],
             'enableVersioning' => (bool)$this->enableVersioning,
             'propagationMethod' => $this->propagationMethod,
+            'settings' => ProjectConfigHelper::packAssociativeArrays($this->settings),
             'siteSettings' => [],
         ];
 

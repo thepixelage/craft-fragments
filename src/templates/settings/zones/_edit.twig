@@ -1,6 +1,6 @@
 {% extends '@fragments/_layouts/settings.twig' %}
 
-{% import '_includes/forms' as forms %}
+{% import '_includes/forms.html' as forms %}
 
 {% set title = "Edit Zone"|t('fragments') %}
 
@@ -50,6 +50,16 @@
         value: zone.handle,
         errors: zone.getErrors('handle'),
         required: true
+    }) }}
+
+    {{ forms.checkboxSelectField({
+        label: "Allowed Fragment Types"|t('app'),
+        instructions: "Which fragment types are allowed in this zone?"|t('app'),
+        id: 'allowedFragmentTypes',
+        name: 'allowedFragmentTypes',
+        options: fragmentTypeOptions,
+        values: allowedFragmentTypes,
+        showAllOption: true,
     }) }}
 
     <hr>

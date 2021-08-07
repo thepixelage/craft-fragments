@@ -26,6 +26,7 @@ use yii\base\ErrorException;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
+use yii\helpers\Json;
 use yii\web\ServerErrorHttpException;
 
 /**
@@ -49,13 +50,15 @@ class Zones extends Component
                 ->all();
 
             foreach ($zoneRecords as $zoneRecord) {
-                $zones[] = new Zone($zoneRecord->toArray([
+                $zone = new Zone($zoneRecord->toArray([
                     'id',
                     'structureId',
                     'name',
                     'handle',
                     'uid',
                 ]));
+                $zone->settings = Json::decode($zoneRecord->settings);
+                $zones[] = $zone;
             }
 
             $this->zones = new MemoizableArray($zones);
@@ -70,7 +73,17 @@ class Zones extends Component
             ->where(['id' => $id])
             ->one();
 
-        return $result ? new Zone($result) : null;
+        if (!$result) {
+            return null;
+        }
+
+        $settings = Json::decode($result['settings']);
+        unset($result['settings']);
+
+        $zone = new Zone($result);
+        $zone->settings = $settings;
+
+        return $zone;
     }
 
     public function getZoneByUid($uid): ?Zone
@@ -79,7 +92,17 @@ class Zones extends Component
             ->where(['uid' => $uid])
             ->one();
 
-        return $result ? new Zone($result) : null;
+        if (!$result) {
+            return null;
+        }
+
+        $settings = Json::decode($result['settings']);
+        unset($result['settings']);
+
+        $zone = new Zone($result);
+        $zone->settings = $settings;
+
+        return $zone;
     }
 
     public function getZoneByHandle($handle): ?Zone
@@ -88,7 +111,17 @@ class Zones extends Component
             ->where(['handle' => $handle])
             ->one();
 
-        return $result ? new Zone($result) : null;
+        if (!$result) {
+            return null;
+        }
+
+        $settings = Json::decode($result['settings']);
+        unset($result['settings']);
+
+        $zone = new Zone($result);
+        $zone->settings = $settings;
+
+        return $zone;
     }
 
     public function getZoneCount(): int
@@ -183,6 +216,7 @@ class Zones extends Component
             $zoneRecord->handle = $data['handle'];
             $zoneRecord->enableVersioning = (bool)$data['enableVersioning'];
             $zoneRecord->propagationMethod = $data['propagationMethod'] ?? Zone::PROPAGATION_METHOD_ALL;
+            $zoneRecord->settings = $data['settings'];
 
             $isNewZone = $zoneRecord->getIsNewRecord();
             $propagationMethodChanged = $zoneRecord->propagationMethod != $zoneRecord->getOldAttribute('propagationMethod');
@@ -321,6 +355,7 @@ class Zones extends Component
                 'handle',
                 'structureId',
                 'propagationMethod',
+                'settings',
                 'uid'
             ])
             ->from([Table::ZONES]);

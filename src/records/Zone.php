@@ -20,6 +20,7 @@ use yii\db\ActiveQueryInterface;
  * @property bool $enableVersioning Enable versioning
  * @property string $propagationMethod Propagation method
  * @property Zone_SiteSettings[] $siteSettings Site settings
+ * @property string $settings Settings
  */
 class Zone extends ActiveRecord
 {

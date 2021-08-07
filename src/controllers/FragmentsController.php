@@ -37,17 +37,15 @@ class FragmentsController extends Controller
             return $this->redirect('fragments/settings');
         }
 
-        $fragmentTypes = array_filter(
-            Plugin::getInstance()->fragmentTypes->getAllFragmentTypes(),
-            function ($type) {
-                return [
-                    'handle' => $type['handle'],
-                    'id' => (int)$type['id'],
-                    'name' => Craft::t('site', $type['name']),
-                    'uid' => Craft::t('site', $type['uid']),
-                ];
-            }
-        );
+        $fragmentTypes = [];
+        $allFragmentTypes = Plugin::getInstance()->fragmentTypes->getAllFragmentTypes();
+        $allZones = Plugin::getInstance()->zones->getAllZones();
+        foreach ($allZones as $zone) {
+            $allowedFragmentTypeHandles = $zone->settings['fragmentTypes'];
+            $fragmentTypes['zone:' . $zone->uid] = array_values(array_filter($allFragmentTypes, function ($type) use ($allowedFragmentTypeHandles) {
+                return ($allowedFragmentTypeHandles == '*' || in_array('type:' . $type['uid'], $allowedFragmentTypeHandles));
+            }));
+        }
 
         $indexJsUrl = Craft::$app->assetManager->getPublishedUrl(
             '@thepixelage/fragments/resources/js/FragmentIndex.js',
@@ -67,6 +65,7 @@ class FragmentsController extends Controller
      * @throws SiteNotFoundException
      * @throws InvalidConfigException
      * @throws NotFoundHttpException
+     * @throws Exception
      */
     public function actionEdit(string $zone, string $type, ?int $fragmentId = null, ?string $site = null, ?Fragment $fragment = null): Response
     {
@@ -100,6 +99,14 @@ class FragmentsController extends Controller
                 $fragment->zoneId = $zone->id;
                 $fragment->siteId = $site->id;
             }
+        }
+
+        if (
+            !$fragment->id &&
+            is_array($zone->settings['fragmentTypes']) &&
+            !in_array('type:' . $fragmentType->uid, $zone->settings['fragmentTypes'])
+        ) {
+            throw new Exception(Craft::t('fragments', "{$fragmentType->name} fragments are not allowed in this zone."));
         }
 
         if (Craft::$app->getIsMultiSite()) {

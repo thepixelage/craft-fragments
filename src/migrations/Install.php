@@ -50,6 +50,7 @@ class Install extends Migration
             'structureId' => $this->integer(),
             'enableVersioning' => $this->boolean()->defaultValue(false)->notNull(),
             'propagationMethod' => $this->string()->defaultValue(Zone::PROPAGATION_METHOD_ALL)->notNull(),
+            'settings' => $this->text(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateDeleted' => $this->dateTime(),
             'dateUpdated' => $this->dateTime()->notNull(),

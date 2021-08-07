@@ -41,10 +41,29 @@ class ZonesController extends Controller
             }
         }
 
+        $allFragmentTypes = Plugin::getInstance()->fragmentTypes->getAllFragmentTypes();
+        $fragmentTypeOptions = [];
+        foreach ($allFragmentTypes as $type) {
+            $fragmentTypeOptions[$type['handle']] = $type['name'];
+        }
+
+        if (is_array($zone->settings['fragmentTypes'])) {
+            $allowedFragmentTypeHandles = array_map(function ($type) {
+                $tokens = explode(':', $type);
+                $typeUid = $tokens[1];
+                $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeByUid($typeUid);
+                return $fragmentType->handle;
+            }, $zone->settings['fragmentTypes']);
+        } else {
+            $allowedFragmentTypeHandles = $zone->settings['fragmentTypes'];
+        }
+
         return $this->renderTemplate('@fragments/settings/zones/_edit.twig', [
             'zone' => $zone,
             'isNew' => ($zone->id == null),
             'headlessMode' => true,
+            'fragmentTypeOptions' => $fragmentTypeOptions,
+            'allowedFragmentTypes' => $allowedFragmentTypeHandles,
         ]);
     }
 
@@ -74,6 +93,17 @@ class ZonesController extends Controller
         $zone->enableVersioning = $this->request->getBodyParam('enableVersioning', true);
         $zone->propagationMethod = $this->request->getBodyParam('propagationMethod', Zone::PROPAGATION_METHOD_ALL);
         $zone->maxLevels = 1;
+
+        $allowedFragmentTypes = $this->request->getBodyParam('allowedFragmentTypes', '*');
+        if ($allowedFragmentTypes != '*') {
+            $allowedFragmentTypes = array_map(function ($typeHandle) {
+                $type = Plugin::getInstance()->fragmentTypes->getFragmentTypeByHandle($typeHandle);
+                return 'type:' . $type->uid;
+            }, $allowedFragmentTypes);
+        }
+        $zone->settings = [
+            'fragmentTypes' => $allowedFragmentTypes
+        ];
 
         // Site-specific settings
         $allSiteSettings = [];

@@ -183,7 +183,8 @@ class FragmentTypes extends Component
                 'uid',
                 'fieldLayoutId',
             ])
-            ->from([Table::FRAGMENTTYPES]);
+            ->from([Table::FRAGMENTTYPES])
+            ->orderBy('name asc');
     }
 
     private function getFragmentTypeRecord(string $uid): FragmentTypeRecord
