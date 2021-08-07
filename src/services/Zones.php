@@ -10,11 +10,17 @@ use craft\errors\StructureNotFoundException;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
 use craft\helpers\ProjectConfig as ProjectConfigHelper;
+use craft\helpers\Queue;
 use craft\helpers\StringHelper;
 use craft\models\Structure;
+use craft\queue\jobs\ApplyNewPropagationMethod;
+use craft\queue\jobs\ResaveElements;
 use thepixelage\fragments\db\Table;
+use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\models\Zone;
+use thepixelage\fragments\models\Zone_SiteSettings;
 use thepixelage\fragments\records\Zone as ZoneRecord;
+use thepixelage\fragments\records\Zone_SiteSettings as Zone_SiteSettingsRecord;
 use Throwable;
 use yii\base\ErrorException;
 use yii\base\Exception;
@@ -30,6 +36,7 @@ use yii\web\ServerErrorHttpException;
 class Zones extends Component
 {
     private ?MemoizableArray $zones = null;
+    public ?bool $autoResaveFragments = true;
 
     public function getAllZones(): array
     {
@@ -89,6 +96,28 @@ class Zones extends Component
         return $this->createZonesQuery()->count();
     }
 
+    public function getZoneSiteSettings(int $zoneId): array
+    {
+        $siteSettings = (new Query())
+            ->select([
+                'zones_sites.id',
+                'zones_sites.zoneId',
+                'zones_sites.siteId',
+                'zones_sites.enabledByDefault',
+            ])
+            ->from(['zones_sites' => Table::ZONES_SITES])
+            ->innerJoin(['sites' => Table::SITES], '[[sites.id]] = [[zones_sites.siteId]]')
+            ->where(['zones_sites.zoneId' => $zoneId])
+            ->orderBy(['sites.sortOrder' => SORT_ASC])
+            ->all();
+
+        foreach ($siteSettings as $key => $value) {
+            $siteSettings[$key] = new Zone_SiteSettings($value);
+        }
+
+        return $siteSettings;
+    }
+
     /**
      * @throws NotSupportedException
      * @throws InvalidConfigException
@@ -112,14 +141,7 @@ class Zones extends Component
         }
 
         $path = "fragmentZones.$zone->uid";
-        Craft::$app->projectConfig->set($path, [
-            'name' => $zone->name,
-            'handle' => $zone->handle,
-            'structure' => [
-                'uid' => $zone->structureId ? Db::uidById(Table::STRUCTURES, $zone->structureId) : StringHelper::UUID(),
-                'maxLevels' => (int)$zone->maxLevels ?: null,
-            ],
-        ]);
+        Craft::$app->projectConfig->set($path, $zone->getConfig());
 
         if ($isNew) {
             $zone->id = Db::idByUid(Table::ZONES, $zone->uid);
@@ -143,36 +165,128 @@ class Zones extends Component
      */
     public function handleChangedZone(ConfigEvent $event)
     {
+        ProjectConfigHelper::ensureAllSitesProcessed();
+        ProjectConfigHelper::ensureAllFieldsProcessed();
+
         $zoneUid = $event->tokenMatches[0];
         $data = $event->newValue;
-
-        ProjectConfigHelper::ensureAllFieldsProcessed();
 
         $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
-            $structureData = $data['structure'];
-            $structureUid = $structureData['uid'];
+            $siteSettingData = $data['siteSettings'];
 
             // Basic data
             $zoneRecord = $this->getZoneRecord($zoneUid, true);
-
-            // Structure
-            $structuresService = Craft::$app->getStructures();
-            $structure = $structuresService->getStructureByUid($structureUid, true) ?? new Structure(['uid' => $structureUid]);
-            $structure->maxLevels = $structureData['maxLevels'];
-            $structuresService->saveStructure($structure);
-
-            $zoneRecord->structureId = $structure->id;
             $zoneRecord->uid = $zoneUid;
             $zoneRecord->name = $data['name'];
             $zoneRecord->handle = $data['handle'];
+            $zoneRecord->enableVersioning = (bool)$data['enableVersioning'];
+            $zoneRecord->propagationMethod = $data['propagationMethod'] ?? Zone::PROPAGATION_METHOD_ALL;
 
-            $wasTrashed = (bool)$zoneRecord->dateDeleted;
-            if ($wasTrashed) {
+            $isNewZone = $zoneRecord->getIsNewRecord();
+            $propagationMethodChanged = $zoneRecord->propagationMethod != $zoneRecord->getOldAttribute('propagationMethod');
+
+            // Save the structure
+            $structureData = $data['structure'];
+            $structureUid = $structureData['uid'];
+            $structure = Craft::$app->getStructures()->getStructureByUid($structureUid, true) ?? new Structure(['uid' => $structureUid]);
+            $structure->maxLevels = 1;
+            Craft::$app->getStructures()->saveStructure($structure);
+            $zoneRecord->structureId = $structure->id;
+
+            $resaveFragments = (
+                $zoneRecord->handle !== $zoneRecord->getOldAttribute('handle') ||
+                $propagationMethodChanged ||
+                $zoneRecord->structureId != $zoneRecord->getOldAttribute('structureId')
+            );
+
+            if ($zoneRecord->dateDeleted) {
                 $zoneRecord->restore();
+                $resaveFragments = true;
             } else {
                 $zoneRecord->save(false);
+            }
+
+            // Update the site settings
+            // -----------------------------------------------------------------
+
+            if (!$isNewZone) {
+                // Get the old zone site settings
+                $allOldSiteSettingsRecords = Zone_SiteSettingsRecord::find()
+                    ->where(['zoneId' => $zoneRecord->id])
+                    ->indexBy('siteId')
+                    ->all();
+            } else {
+                $allOldSiteSettingsRecords = [];
+            }
+
+            $siteIdMap = Db::idsByUids(Table::SITES, array_keys($siteSettingData));
+            $hasNewSite = false;
+
+            foreach ($siteSettingData as $siteUid => $siteSettings) {
+                $siteId = $siteIdMap[$siteUid];
+
+                // Was this already selected?
+                if (!$isNewZone && isset($allOldSiteSettingsRecords[$siteId])) {
+                    $siteSettingsRecord = $allOldSiteSettingsRecords[$siteId];
+                } else {
+                    $siteSettingsRecord = new Zone_SiteSettingsRecord();
+                    $siteSettingsRecord->zoneId = $zoneRecord->id;
+                    $siteSettingsRecord->siteId = $siteId;
+                    $resaveFragments = true;
+                    $hasNewSite = true;
+                }
+
+                $siteSettingsRecord->enabledByDefault = $siteSettings['enabledByDefault'];
+                $siteSettingsRecord->save(false);
+            }
+
+            if (!$isNewZone) {
+                // Drop any sites that are no longer being used, as well as the associated fragment/element site
+                // rows
+                $affectedSiteUids = array_keys($siteSettingData);
+
+                foreach ($allOldSiteSettingsRecords as $siteId => $siteSettingsRecord) {
+                    $siteUid = array_search($siteId, $siteIdMap, false);
+                    if (!in_array($siteUid, $affectedSiteUids, false)) {
+                        $siteSettingsRecord->delete();
+                        $resaveFragments = true;
+                    }
+                }
+            }
+
+            // Finally, deal with the existing fragments...
+            // -----------------------------------------------------------------
+
+            if (!$isNewZone && $resaveFragments) {
+                // If the propagation method just changed, we definitely need to update entries for that
+                if ($propagationMethodChanged) {
+                    Queue::push(new ApplyNewPropagationMethod([
+                        'description' => Craft::t('app', 'Applying new propagation method to {zone} entries', [
+                            'zone' => $zoneRecord->name,
+                        ]),
+                        'elementType' => Fragment::class,
+                        'criteria' => [
+                            'zoneId' => $zoneRecord->id,
+                            'structureId' => $zoneRecord->structureId,
+                        ],
+                    ]));
+                } else if ($this->autoResaveFragments) {
+                    Queue::push(new ResaveElements([
+                        'description' => Craft::t('app', 'Resaving {zone} entries', [
+                            'zone' => $zoneRecord->name,
+                        ]),
+                        'elementType' => Fragment::class,
+                        'criteria' => [
+                            'zoneId' => $zoneRecord->id,
+                            'siteId' => array_values($siteIdMap),
+                            'unique' => true,
+                            'status' => null,
+                        ],
+                        'updateSearchIndex' => $hasNewSite,
+                    ]));
+                }
             }
 
             $transaction->commit();

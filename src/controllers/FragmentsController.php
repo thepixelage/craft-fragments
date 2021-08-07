@@ -4,6 +4,7 @@ namespace thepixelage\fragments\controllers;
 
 use Craft;
 use craft\errors\ElementNotFoundException;
+use craft\errors\SiteNotFoundException;
 use craft\helpers\Json;
 use craft\web\Controller;
 use thepixelage\fragments\elements\Fragment;
@@ -46,11 +47,13 @@ class FragmentsController extends Controller
 
     /**
      * @throws BadRequestHttpException
+     * @throws SiteNotFoundException
      */
-    public function actionEdit(string $zoneHandle, string $fragmentTypeHandle, ?int $fragmentId = null, ?Fragment $fragment = null): Response
+    public function actionEdit(string $zoneHandle, string $fragmentTypeHandle, ?int $fragmentId = null, ?string $siteHandle = null, ?Fragment $fragment = null): Response
     {
         $zone = Plugin::getInstance()->zones->getZoneByHandle($zoneHandle);
         $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeByHandle($fragmentTypeHandle);
+        $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : Craft::$app->getSites()->getCurrentSite();
 
         if (!$fragment) {
             if ($fragmentId) {
@@ -62,6 +65,7 @@ class FragmentsController extends Controller
                 $fragment = new Fragment();
                 $fragment->fragmentTypeId = $fragmentType->id;
                 $fragment->zoneId = $zone->id;
+                $fragment->siteId = $site->id;
             }
         }
 

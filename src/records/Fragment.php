@@ -13,6 +13,7 @@ use yii\db\ActiveQueryInterface;
  * @property int $zoneId Zone ID
  * @property Element $element Element
  * @property Zone $zone Zone
+ * @property-read ActiveQueryInterface $fragmentType
  * @property int $fragmentTypeId
  */
 class Fragment extends ActiveRecord

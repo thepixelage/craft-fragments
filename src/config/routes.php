@@ -10,5 +10,6 @@ return [
     'fragments/fragments' => 'fragments/fragments/index',
     'fragments/fragments/<zoneHandle:{handle}>' => 'fragments/fragments/index',
     'fragments/fragments/<zoneHandle:{handle}>/<fragmentTypeHandle:{handle}>/new' => 'fragments/fragments/edit',
+    'fragments/fragments/<zoneHandle:{handle}>/<fragmentTypeHandle:{handle}>/new/<siteHandle:{handle}>' => 'fragments/fragments/edit',
     'fragments/fragments/<zoneHandle:{handle}>/<fragmentTypeHandle:{handle}>/<fragmentId:\d+>' => 'fragments/fragments/edit',
 ];

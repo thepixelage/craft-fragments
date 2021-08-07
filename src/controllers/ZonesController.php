@@ -5,6 +5,7 @@ namespace thepixelage\fragments\controllers;
 use Craft;
 use craft\web\Controller;
 use thepixelage\fragments\models\Zone;
+use thepixelage\fragments\models\Zone_SiteSettings;
 use thepixelage\fragments\Plugin;
 use yii\base\ErrorException;
 use yii\base\Exception;
@@ -43,6 +44,7 @@ class ZonesController extends Controller
         return $this->renderTemplate('@fragments/settings/zones/_edit.twig', [
             'zone' => $zone,
             'isNew' => ($zone->id == null),
+            'headlessMode' => true,
         ]);
     }
 
@@ -69,6 +71,29 @@ class ZonesController extends Controller
 
         $zone->name = $this->request->getBodyParam('name');
         $zone->handle = $this->request->getBodyParam('handle');
+        $zone->enableVersioning = $this->request->getBodyParam('enableVersioning', true);
+        $zone->propagationMethod = $this->request->getBodyParam('propagationMethod', Zone::PROPAGATION_METHOD_ALL);
+        $zone->maxLevels = 1;
+
+        // Site-specific settings
+        $allSiteSettings = [];
+
+        foreach (Craft::$app->getSites()->getAllSites() as $site) {
+            $postedSettings = $this->request->getBodyParam('sites.' . $site->handle);
+
+            // Skip disabled sites if this is a multi-site install
+            if (Craft::$app->getIsMultiSite() && empty($postedSettings['enabled'])) {
+                continue;
+            }
+
+            $siteSettings = new Zone_SiteSettings();
+            $siteSettings->siteId = $site->id;
+            $siteSettings->enabledByDefault = (bool)$postedSettings['enabledByDefault'];
+
+            $allSiteSettings[$site->id] = $siteSettings;
+        }
+
+        $zone->setSiteSettings($allSiteSettings);
 
         /** @noinspection PhpUnhandledExceptionInspection */
         if (!Plugin::getInstance()->zones->saveZone($zone)) {

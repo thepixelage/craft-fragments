@@ -7,6 +7,7 @@ use craft\db\SoftDeleteTrait;
 use craft\records\Structure;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
+use thepixelage\fragments\models\Zone_SiteSettings;
 use yii\db\ActiveQueryInterface;
 
 /**
@@ -16,6 +17,9 @@ use yii\db\ActiveQueryInterface;
  * @property string $handle Handle
  * @property Structure $structure Structure
  * @property Fragment[] $fragments Categories
+ * @property bool $enableVersioning Enable versioning
+ * @property string $propagationMethod Propagation method
+ * @property Zone_SiteSettings[] $siteSettings Site settings
  */
 class Zone extends ActiveRecord
 {
@@ -34,5 +38,10 @@ class Zone extends ActiveRecord
     public function getFragments(): ActiveQueryInterface
     {
         return $this->hasMany(Fragment::class, ['zoneId' => 'id']);
+    }
+
+    public function getSiteSettings(): ActiveQueryInterface
+    {
+        return $this->hasMany(Zone_SiteSettings::class, ['zoneId' => 'id']);
     }
 }
