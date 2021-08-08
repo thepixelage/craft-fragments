@@ -7,11 +7,13 @@ use craft\events\DefineFieldLayoutFieldsEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\RegisterUserPermissionsEvent;
 use craft\fieldlayoutelements\TitleField;
 use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
 use craft\services\Elements;
 use craft\services\Fields;
+use craft\services\UserPermissions;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
@@ -57,6 +59,7 @@ class Plugin extends \craft\base\Plugin
         $this->registerCpRoutes();
         $this->registerProjectConfigChangeListeners();
         $this->registerFieldLayoutStandardFields();
+        $this->registerUserPermissions();
     }
 
     public function getSettingsResponse()
@@ -173,5 +176,31 @@ class Plugin extends \craft\base\Plugin
                 $event->fields[] = TitleField::class;
             }
         });
+    }
+
+    private function registerUserPermissions()
+    {
+        Event::on(
+            UserPermissions::class,
+            UserPermissions::EVENT_REGISTER_PERMISSIONS,
+            function(RegisterUserPermissionsEvent $event) {
+                $zones = $this->zones->getAllZones();
+                foreach ($zones as $zone) {
+                    $event->permissions['Fragment Zone - ' . $zone->name] = [
+                        ('editFragments:' . $zone->uid) => [
+                            'label' => 'Edit fragments',
+                            'nested' => [
+                                ('createFragments:' . $zone->uid) => [
+                                    'label' => 'Create fragments',
+                                ],
+                                ('deleteFragments:' . $zone->uid) => [
+                                    'label' => 'Delete fragments',
+                                ],
+                            ],
+                        ],
+                    ];
+                }
+            }
+        );
     }
 }

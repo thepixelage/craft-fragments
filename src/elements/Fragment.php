@@ -24,6 +24,7 @@ use yii\db\Exception;
  *
  * @property-read null|int $sourceId
  * @property-read Zone $zone
+ * @property-read bool $isDeletable
  * @property-read FragmentType $fragmentType
  */
 class Fragment extends Element
@@ -223,6 +224,16 @@ class Fragment extends Element
     /**
      * @throws InvalidConfigException
      */
+    public function getIsDeletable(): bool
+    {
+        $zone = $this->getZone();
+        $userSession = Craft::$app->getUser();
+        return $userSession->checkPermission("deleteFragments:$zone->uid");
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
     public function beforeSave(bool $isNew): bool
     {
         $this->structureId = $this->getZone()->structureId;
@@ -304,10 +315,7 @@ class Fragment extends Element
 
             $source['defaultSort'] = ['structure', 'asc'];
             $source['structureId'] = $zone->structureId;
-            $source['structureEditable'] = Craft::$app->getUser()->checkPermission('publishFragments:' . $zone->uid);
-            $source['defaultSort'] = ['structure', 'asc'];
-            $source['structureId'] = $zone->structureId;
-            $source['structureEditable'] = Craft::$app->getUser()->checkPermission('publishFragments:' . $zone->uid);
+            $source['structureEditable'] = Craft::$app->getUser()->checkPermission('editFragments:' . $zone->uid);
 
             $sources[] = $source;
         }

@@ -8,9 +8,11 @@ use craft\errors\ElementNotFoundException;
 use craft\errors\SiteNotFoundException;
 use craft\helpers\Db;
 use craft\helpers\Json;
+use craft\models\Site;
 use craft\web\Controller;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
+use thepixelage\fragments\models\Zone;
 use thepixelage\fragments\Plugin;
 use Throwable;
 use yii\base\Exception;
@@ -101,6 +103,9 @@ class FragmentsController extends Controller
             }
         }
 
+        $this->enforceSitePermission($site);
+        $this->enforceEditFragmentPermissions($fragment);
+
         if (
             !$fragment->id &&
             is_array($zone->settings['fragmentTypes']) &&
@@ -137,6 +142,8 @@ class FragmentsController extends Controller
      */
     public function actionSave(): ?Response
     {
+        $this->requirePostRequest();
+
         $fragmentId = $this->request->getBodyParam('sourceId');
         $siteId = $this->request->getBodyParam('siteId');
         $zoneId = $this->request->getBodyParam('zoneId');
@@ -178,7 +185,12 @@ class FragmentsController extends Controller
         }
         $fragment->setEnabledForSite($enabledForSite ?? $fragment->getEnabledForSite());
 
-        $fragment->setScenario(Element::SCENARIO_LIVE);
+        $this->enforceSitePermission($fragment->getSite());
+        $this->enforceEditFragmentPermissions($fragment);
+
+        if ($fragment->getEnabledForSite()) {
+            $fragment->setScenario(Element::SCENARIO_LIVE);
+        }
 
         if (!Craft::$app->elements->saveElement($fragment)) {
             if ($this->request->getAcceptsJson()) {
@@ -220,7 +232,7 @@ class FragmentsController extends Controller
             throw new BadRequestHttpException("Invalid site ID: $siteId");
         }
 
-//        $this->enforceSitePermission($site);
+        $this->enforceSitePermission($site);
 
         // Get the entry in any but the to-be-deleted site -- preferably one the user has access to edit
         $fragmentId = $this->request->getBodyParam('sourceId');
@@ -238,8 +250,8 @@ class FragmentsController extends Controller
             throw new NotFoundHttpException('Fragment not found');
         }
 
-//        $this->enforceEditEntryPermissions($fragment);
-//        $this->enforceDeleteEntryPermissions($fragment);
+        $this->enforceEditFragmentPermissions($fragment);
+        $this->enforceDeleteFragmentPermissions($fragment);
 
         // Delete the row in elements_sites
         Db::delete(Table::ELEMENTS_SITES, [
@@ -273,11 +285,14 @@ class FragmentsController extends Controller
         $this->requirePostRequest();
 
         $fragmentId = $this->request->getRequiredBodyParam('sourceId');
-        $fragment = Craft::$app->getElements()->getElementById($fragmentId);
+        /** @var Fragment $fragment */
+        $fragment = Craft::$app->getElements()->getElementById($fragmentId, Fragment::class);
 
         if (!$fragment) {
             throw new NotFoundHttpException("Fragment not found");
         }
+
+        $this->enforceDeleteFragmentPermissions($fragment);
 
         if (!Craft::$app->getElements()->deleteElement($fragment)) {
             if ($this->request->getAcceptsJson()) {
@@ -300,6 +315,66 @@ class FragmentsController extends Controller
         $this->setSuccessFlash(Craft::t('app', "Fragment deleted."));
 
         return $this->redirectToPostedUrl($fragment);
+    }
+
+    /**
+     * @throws SiteNotFoundException
+     * @throws ForbiddenHttpException
+     */
+    protected function editableSiteIds(Zone $zone): array
+    {
+        if (!Craft::$app->getIsMultiSite()) {
+            return [Craft::$app->getSites()->getPrimarySite()->id];
+        }
+
+        // Only use the sites that the user has access to
+        $zoneSiteIds = array_keys($zone->getSiteSettings());
+        $editableSiteIds = Craft::$app->getSites()->getEditableSiteIds();
+        $siteIds = array_merge(array_intersect($zoneSiteIds, $editableSiteIds));
+        if (empty($siteIds)) {
+            throw new ForbiddenHttpException('User not permitted to edit content in any sites supported by this zone');
+        }
+
+        return $siteIds;
+    }
+
+    /**
+     * @throws ForbiddenHttpException
+     */
+    protected function enforceSitePermission(Site $site)
+    {
+        if (Craft::$app->getIsMultiSite()) {
+            $this->requirePermission('editSite:' . $site->uid);
+        }
+    }
+
+    /**
+     * @throws ForbiddenHttpException
+     * @throws InvalidConfigException
+     */
+    protected function enforceEditFragmentPermissions(Fragment $fragment, bool $duplicate = false)
+    {
+        $permissionSuffix = ':' . $fragment->getZone()->uid;
+
+        // Make sure the user is allowed to edit entries in this section
+        $this->requirePermission('editFragments' . $permissionSuffix);
+
+        // Is it a new entry?
+        if (!$fragment->id || $duplicate) {
+            // Make sure they have permission to create new fragments in this zone
+            $this->requirePermission('createFragments' . $permissionSuffix);
+        }
+    }
+
+    /**
+     * @throws InvalidConfigException
+     * @throws ForbiddenHttpException
+     */
+    protected function enforceDeleteFragmentPermissions(Fragment $fragment)
+    {
+        if (!$fragment->getIsDeletable()) {
+            throw new ForbiddenHttpException('User is not permitted to perform this action');
+        }
     }
 
     /**
