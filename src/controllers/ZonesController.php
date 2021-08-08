@@ -47,15 +47,19 @@ class ZonesController extends Controller
             $fragmentTypeOptions[$type['handle']] = $type['name'];
         }
 
-        if (is_array($zone->settings['fragmentTypes'])) {
-            $allowedFragmentTypeHandles = array_map(function ($type) {
-                $tokens = explode(':', $type);
-                $typeUid = $tokens[1];
-                $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeByUid($typeUid);
-                return $fragmentType->handle;
-            }, $zone->settings['fragmentTypes']);
+        if ($zone->settings) {
+            if (is_array($zone->settings['fragmentTypes'])) {
+                $allowedFragmentTypeHandles = array_map(function ($type) {
+                    $tokens = explode(':', $type);
+                    $typeUid = $tokens[1];
+                    $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeByUid($typeUid);
+                    return $fragmentType->handle;
+                }, $zone->settings['fragmentTypes']);
+            } else {
+                $allowedFragmentTypeHandles = $zone->settings['fragmentTypes'];
+            }
         } else {
-            $allowedFragmentTypeHandles = $zone->settings['fragmentTypes'];
+            $allowedFragmentTypeHandles = '*';
         }
 
         return $this->renderTemplate('@fragments/settings/zones/_edit.twig', [
