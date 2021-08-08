@@ -1,6 +1,6 @@
 # Fragments Plugin for Craft CMS
 
-Fragments is a Craft CMS plugin for managing content and display fragments.
+**Fragments** is a Craft CMS plugin for managing content and display fragments.
 
 There are many situations where 
 
@@ -60,6 +60,22 @@ To create a new template zone, go to **Settings → Fragments → Zones**.
 
 Template zones allow you to specify areas in your templates where fragments can be created and displayed in.
 > **Tip:** Template zones can limit the fragment types that are allowed to be created in them. This helps make it easier to organise and manage fragments in the zones.
+
+## Querying Fragments
+
+To query a list of fragments in a zone to display in your templates:
+
+```
+{% set fragments = craft.fragments.zone('my-zone-handle').all() %}
+```
+
+Once you have queried the list of fragments, you can access the fields the same way you do for Entries.
+
+To target only fragments of a certain fragment type, modify the previous query like this:
+
+```
+{% set fragments = craft.fragments.zone('my-zone-handle').type('my-fragment-type').all() %}
+```
 
 ---
 
