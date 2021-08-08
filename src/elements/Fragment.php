@@ -5,6 +5,7 @@ namespace thepixelage\fragments\elements;
 use Craft;
 use craft\base\Element;
 use craft\elements\actions\Delete;
+use craft\elements\actions\Restore;
 use craft\elements\actions\SetStatus;
 use craft\elements\db\ElementQueryInterface;
 use craft\helpers\ArrayHelper;
@@ -272,28 +273,41 @@ class Fragment extends Element
         parent::afterSave($isNew);
     }
 
+    /**
+     * @throws \yii\base\Exception
+     */
+    public function afterRestore()
+    {
+        $zone = $this->getZone();
+        Craft::$app->getStructures()->appendToRoot($zone->structureId, $this);
+
+        parent::afterRestore();
+    }
+
     protected static function defineActions(string $source = null): array
     {
-        return [
+        $actions = [
             SetStatus::class,
             Delete::class,
         ];
+
+        $actions[] = Craft::$app->getElements()->createAction([
+            'type' => Restore::class,
+            'successMessage' => Craft::t('fragments', "Fragments restored."),
+            'partialSuccessMessage' => Craft::t('fragments', "Some fragments restored."),
+            'failMessage' => Craft::t('fragments', "Fragments not restored."),
+        ]);
+
+        return $actions;
     }
 
     protected static function defineSources(string $context = null): array
     {
+        $zones = Plugin::getInstance()->zones->getAllZones();
         if ($context === 'index') {
-            $zones = Plugin::getInstance()->zones->getAllZones();
             $editable = true;
         } else {
-            $zones = Plugin::getInstance()->zones->getAllZones();
             $editable = false;
-        }
-
-        $zoneIds = [];
-
-        foreach ($zones as $zone) {
-            $zoneIds[] = $zone->id;
         }
 
         $sources = [];
