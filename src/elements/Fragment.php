@@ -9,6 +9,7 @@ use craft\elements\actions\Restore;
 use craft\elements\actions\SetStatus;
 use craft\elements\db\ElementQueryInterface;
 use craft\helpers\ArrayHelper;
+use craft\helpers\Json;
 use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
 use craft\models\Site;
@@ -32,6 +33,27 @@ class Fragment extends Element
 {
     public ?int $fragmentTypeId;
     public ?int $zoneId;
+    public ?array $settings = [];
+
+    public function __construct($config = [])
+    {
+        if (isset($config['settings'])) {
+            $config['settings'] = Json::decode($config['settings']);
+        } else {
+            $config['settings'] = [
+                'visibility' => [
+                    'ruletype' => '',
+                    'rules' => [],
+                ],
+            ];
+        }
+
+        if (!is_array($config['settings']['visibility']['rules'])) {
+            $config['settings']['visibility']['rules'] = [];
+        }
+
+        parent::__construct($config);
+    }
 
     public static function displayName(): string
     {
@@ -262,6 +284,7 @@ class Fragment extends Element
 
             $record->zoneId = (int)$this->zoneId;
             $record->fragmentTypeId = (int)$this->fragmentTypeId;
+            $record->settings = Json::encode($this->settings);
             $record->save(false);
 
             if (!$this->duplicateOf) {

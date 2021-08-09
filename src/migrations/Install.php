@@ -26,6 +26,7 @@ class Install extends Migration
             'id' => $this->integer()->notNull(),
             'zoneId' => $this->integer()->notNull(),
             'fragmentTypeId' => $this->integer()->notNull(),
+            'settings' => $this->text(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),

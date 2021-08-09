@@ -11,6 +11,7 @@ use yii\db\ActiveQueryInterface;
  *
  * @property int $id ID
  * @property int $zoneId Zone ID
+ * @property string $settings Settings
  * @property Element $element Element
  * @property Zone $zone Zone
  * @property-read ActiveQueryInterface $fragmentType

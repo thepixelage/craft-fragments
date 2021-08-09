@@ -103,6 +103,15 @@ class FragmentsController extends Controller
             }
         }
 
+        if (!isset($fragment->settings['visibility'])) {
+            $fragment->settings = [
+                'visibility' => [
+                    'ruletype' => '',
+                    'rules' => [],
+                ]
+            ];
+        }
+
         $this->enforceSitePermission($site);
         $this->enforceEditFragmentPermissions($fragment);
 
@@ -130,6 +139,8 @@ class FragmentsController extends Controller
             'fragmentType' => $fragmentType,
             'siteIds' => $siteIds,
             'canUpdateSource' => true,
+            'visibilityRuleType' => $fragment->settings['visibility']['ruletype'],
+            'visibilityRules' => $fragment->settings['visibility']['rules'],
         ]);
     }
 
@@ -166,10 +177,16 @@ class FragmentsController extends Controller
             }
         } else {
             $fragment = new Fragment();
+            $fragment->settings = [
+                'visibility' => []
+            ];
         }
 
         $fragment->zoneId = $zone->id;
         $fragment->fragmentTypeId = $fragmentType->id;
+
+        $visibilitySettings = $this->request->getBodyParam('visibility', []);
+        $fragment->settings['visibility'] = $visibilitySettings;
 
         $fragment->title = $this->request->getBodyParam('title', $fragment->title);
         $fragment->slug = $this->request->getBodyParam('slug', $fragment->slug);

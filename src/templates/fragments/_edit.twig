@@ -311,6 +311,52 @@
 
     <div id="fields">
         {{ form.render()|raw }}
+
+        <hr>
+
+        <div id="visibility-field" class="field">
+            <div class="heading">
+                <label id="visibility-label">Fragment Visibility</label>
+            </div>
+            <div id="sites-instructions" class="instructions">
+                <p>Indicate if the specified rules should include or exclude pages.</p>
+            </div>
+            <div class="input ltr">
+                {{ forms.select({
+                    id: 'visibility-ruletype',
+                    name: 'visibility[ruletype]',
+                    options: {
+                        '': '',
+                        'include': 'Include this fragment only on specified pages',
+                        'exclude': 'Exclude this fragment on specified pages',
+                    },
+                    value: visibilityRuleType
+                }) }}
+            </div>
+            <div id="sites-instructions" class="instructions">
+                <p>Specify the URLs to match for inclusion or exclusion.</p>
+            </div>
+            <div class="input ltr">
+                {{ forms.editableTable({
+                    id: 'visibility-rules',
+                    name: 'visibility[rules]',
+                    cols: {
+                        uri: {
+                            type: 'singleline',
+                            heading: "URL"|t('app'),
+                            info: "Wildcard (*) supported"|t('app'),
+                            placeholder: "Enter URL"|t('app'),
+                            code: true,
+                        },
+                    }|filter,
+                    rows: visibilityRules,
+                    staticRows: false,
+                    errors: []|unique,
+                    addRowLabel: "Add a URL"|t("fragments")
+                }) }}
+            </div>
+        </div>
+
     </div>
 {% endblock %}
 
