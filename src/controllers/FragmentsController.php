@@ -184,6 +184,7 @@ class FragmentsController extends Controller
 
         $fragment->zoneId = $zone->id;
         $fragment->fragmentTypeId = $fragmentType->id;
+        $fragment->siteId = $site->id;
 
         $visibilitySettings = $this->request->getBodyParam('visibility', []);
         $fragment->settings['visibility'] = $visibilitySettings;
