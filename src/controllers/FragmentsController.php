@@ -187,6 +187,10 @@ class FragmentsController extends Controller
         $fragment->siteId = $site->id;
 
         $visibilitySettings = $this->request->getBodyParam('visibility', []);
+        $visibilitySettings['rules'] = array_filter($visibilitySettings['rules'], function ($rule) {
+            return (isset($rule['uri']) && $rule['uri']);
+        });
+
         $fragment->settings['visibility'] = $visibilitySettings;
 
         $fragment->title = $this->request->getBodyParam('title', $fragment->title);
