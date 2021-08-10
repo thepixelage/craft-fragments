@@ -120,16 +120,16 @@
         <div class="field">
             {{ forms.selectField({
                 label: 'Propagation Method'|t('app'),
-                instructions: 'Of the enabled sites above, which sites should entries in this zone be saved to?'|t('app'),
+                instructions: 'Of the enabled sites above, which sites should fragments in this zone be saved to?'|t('app'),
                 warning: zone.id and zone.propagationMethod != 'none' and zone.siteSettings|length > 1 ? 'Changing this may result in data loss.'|t('app'),
                 id: 'propagationMethod',
                 name: 'propagationMethod',
                 options: [
-                    { value: 'none', label: 'Only save entries to the site they were created in'|t('app') },
-                    { value: 'siteGroup', label: 'Save entries to other sites in the same site group'|t('app') },
-                    { value: 'language', label: 'Save entries to other sites with the same language'|t('app') },
-                    { value: 'all', label: 'Save entries to all sites enabled for this section'|t('app') },
-                    { value: 'custom', label: 'Let each entry choose which sites it should be saved to'|t('app') },
+                    { value: 'none', label: 'Only save fragments to the site they were created in'|t('app') },
+                    { value: 'siteGroup', label: 'Save fragments to other sites in the same site group'|t('app') },
+                    { value: 'language', label: 'Save fragments to other sites with the same language'|t('app') },
+                    { value: 'all', label: 'Save fragments to all sites enabled for this section'|t('app') },
+                    { value: 'custom', label: 'Let each fragment choose which sites it should be saved to'|t('app') },
                 ],
                 value: zone.propagationMethod
             }) }}
