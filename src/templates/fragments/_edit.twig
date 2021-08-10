@@ -12,7 +12,11 @@
     }
 ] %}
 
-{% set title = "Edit Fragment"|t('fragments') %}
+{% if isNew %}
+    {% set title = "Create a new fragment"|t('fragments') %}
+{% else %}
+    {% set title = element.title %}
+{% endif %}
 
 {% set redirectUrl = "fragments/fragments/#{fragmentType.handle}" %}
 {% set canUpdateSource = true %}

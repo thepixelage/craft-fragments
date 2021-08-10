@@ -141,6 +141,7 @@ class FragmentsController extends Controller
             'canUpdateSource' => true,
             'visibilityRuleType' => $fragment->settings['visibility']['ruletype'],
             'visibilityRules' => $fragment->settings['visibility']['rules'],
+            'isNew' => $fragment->id == null,
         ]);
     }
 
