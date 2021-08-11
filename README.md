@@ -37,8 +37,7 @@ presentational fragments:
 
 There are many situations where fragments of content need to be displayed in
 multiple pages, but they are ad-hoc content parts or data that may not be part 
-of your entry types. For example, your content admins may need to display 
-messages or call-to-action buttons across entire websites or on only some pages.
+of your entry types.
 
 For example, your Services pages may need a call-to-action button or lead form 
 specific to the service. While you may model a custom field in the Services 
@@ -70,6 +69,9 @@ solution around this, but they bring along some challenges:
   **Fragments** can be used as a subsystem with its own types and zones (think 
   of them as groups or collections) that makes your content block builder 
   fields more scalable.
+
+With **Fragments**, your content editors can create call-to-action fragments 
+that can be included in template zones outside of the entry types.
 
 ## Documentation
 
