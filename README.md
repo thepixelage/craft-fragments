@@ -1,3 +1,5 @@
+<p style="text-align:center;"><img src="https://www.thepixelage.com/plugins/assets/icon-fragments.svg" alt="Fragments icon" width="120"></p>
+
 # Fragments Plugin for Craft CMS
 
 **Fragments** is a Craft CMS plugin for managing content and presentational 
@@ -33,9 +35,36 @@ presentational fragments:
 
 ## Why Fragments?
 
-- Decouple domain model from presentational content
-- Reuseable content
-- Multisite
+There are many situations where fragments of content need to be displayed in
+multiple pages, but they are ad-hoc content parts or data that may not have 
+direct relations to your entry types. For example, your content admins may need 
+to display messages or call-to-action buttons across entire websites or on only 
+some pages.
+
+Without **Fragments**, you may use features in Craft CMS to cobble together a
+solution, but they bring along some problems:
+
+- **Sections and entry types**  
+  Entry types are good for mapping domain models
+  to content models, but for content parts that have no direct relations to
+  these domain models, it may become awkward to represent them as part of the
+  content models, or an overkill to create whole sections just to represent
+  them.
+
+
+- **Globals**  
+  Globals are usually used for content that do not belong as
+  entries or are needed across different pages. However, in multisite setup,
+  using globals becomes difficult for controlling different content on
+  different sites, since all global sets immediately becomes available on all 
+  the sites. This can create confusion for your content editors.
+
+
+- **Content Blocks/Content Builder (Matrix/Neo)**  
+  Content blocks are used to allow content admins to add in ad-hoc content. 
+  **Fragments** can be used as a subsystem with its own types and zones (think 
+  of them as groups or collections) that makes your content block builder 
+  fields infinitely extensible.
 
 ## Documentation
 
@@ -122,44 +151,3 @@ like this:
 ---
 
 Created by [ThePixelAge](https://www.thepixelage.com)
-
-
-[comment]: <> (### The Problem)
-
-[comment]: <> (There are many situations where fragments of content need to be displayed in )
-
-[comment]: <> (multiple pages, but they are ad-hoc content parts or data that may not have direct )
-
-[comment]: <> (relations to your entry types. For example, your content admins may need to )
-
-[comment]: <> (display site-wide or section-wide messages or call-to-action buttons across )
-
-[comment]: <> (websites or on only some pages.)
-
-[comment]: <> (Without **Fragments**, you may use features in Craft CMS to cobble together a )
-
-[comment]: <> (solution, but they bring along some problems:)
-
-[comment]: <> (- **Sections and entry types** - Entry types are good for mapping domain models )
-
-[comment]: <> (  to content models, but for content parts that have no direct relations to )
-
-[comment]: <> (  these domain models, it may become awkward to represent them as part of the )
-
-[comment]: <> (  content models, or an overkill to create whole sections just to represent )
-
-[comment]: <> (  them.)
-
-
-[comment]: <> (- **Globals** - Globals are usually used for content that do not belong as )
-
-[comment]: <> (  entries or are needed across different pages. However, in multisite setup, )
-
-[comment]: <> (  using globals becomes difficult for controlling different content on )
-
-[comment]: <> (  different sites.)
-
-
-[comment]: <> (- **Content Blocks/Content Builder &#40;Matrix/Neo&#41;** - Content blocks are used to )
-
-[comment]: <> (  allow content admins to add in ad-hoc content.)
