@@ -54,17 +54,17 @@ solution, but they bring along some problems:
 
 - **Globals**  
   Globals are usually used for content that do not belong as
-  entries or are needed across different pages. However, in multisite setup,
-  using globals becomes difficult for controlling different content on
-  different sites, since all global sets immediately becomes available on all 
-  the sites. This can create confusion for your content editors.
+  entries or are needed across different pages. However, in multi-site setups,
+  using globals becomes difficult for managing different content on
+  different sites, since all global sets are visible in the control panel for 
+  all the sites. This can create confusion for your content editors.
 
 
 - **Content Blocks/Content Builder (Matrix/Neo)**  
-  Content blocks are used to allow content admins to add in ad-hoc content. 
+  Content block builder fields can become cluttered with too many block types. 
   **Fragments** can be used as a subsystem with its own types and zones (think 
   of them as groups or collections) that makes your content block builder 
-  fields infinitely extensible.
+  fields more scalable.
 
 ## Documentation
 
