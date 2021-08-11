@@ -36,20 +36,25 @@ presentational fragments:
 ## Why Fragments?
 
 There are many situations where fragments of content need to be displayed in
-multiple pages, but they are ad-hoc content parts or data that may not have 
-direct relations to your entry types. For example, your content admins may need 
-to display messages or call-to-action buttons across entire websites or on only 
-some pages.
+multiple pages, but they are ad-hoc content parts or data that may not be part 
+of your entry types. For example, your content admins may need to display 
+messages or call-to-action buttons across entire websites or on only some pages.
+
+For example, your Services pages may need a call-to-action button or lead form 
+specific to the service. While you may model a custom field in the Services 
+entry type to allow content editors to indicate the call-to-action to display, 
+this piece of information becomes coupled to the entry type. If these buttons 
+and lead forms also need to appear on other pages, each of the other entry 
+types also need to have this field added to them.
 
 Without **Fragments**, you may use features in Craft CMS to cobble together a
-solution, but they bring along some problems:
+solution around this, but they bring along some challenges:
 
 - **Sections and entry types**  
-  Entry types are good for mapping domain models
-  to content models, but for content parts that have no direct relations to
-  these domain models, it may become awkward to represent them as part of the
-  content models, or an overkill to create whole sections just to represent
-  them.
+  Entry types are good for mapping domain models to content models, but for 
+  content parts that have no direct relations to these domain models, it may 
+  become awkward to represent them as part of the content models, or an 
+  overkill to create whole sections just to represent them.
 
 
 - **Globals**  
