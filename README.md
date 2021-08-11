@@ -1,4 +1,4 @@
-<p style="text-align:center;"><img src="https://www.thepixelage.com/plugins/assets/icon-fragments.svg" alt="Fragments icon" width="120"></p>
+<p><img src="https://www.thepixelage.com/plugins/assets/icon-fragments.svg" alt="Fragments icon" width="120"></p>
 
 # Fragments Plugin for Craft CMS
 
