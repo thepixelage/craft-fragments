@@ -1,8 +1,8 @@
-<p><img src="https://www.thepixelage.com/plugins/assets/icon-fragments.svg" alt="Fragments icon" width="120"></p>
+<p><a href="https://www.thepixelage.com/plugins/fragments"><img src="https://www.thepixelage.com/plugins/assets/icon-fragments.svg" alt="Fragments icon" width="120"></a></p>
 
 # Fragments Plugin for Craft CMS
 
-**Fragments** is a Craft CMS plugin for managing content and presentational 
+**[Fragments](https://www.thepixelage.com/plugins/fragments)** is a Craft CMS plugin for managing content and presentational 
 fragments. It allows you to decouple your entry types from content 
 blocks, widgets or components that are ad-hoc or presentational in nature.
 
