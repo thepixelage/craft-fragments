@@ -38,44 +38,16 @@ Craft.FragmentIndex = Craft.BaseElementIndex.extend({
             }
 
             // Determine if they are viewing a group that they have permission to create categories in
-            var selectedGroup;
-
-            if (selectedSourceHandle) {
-                for (i = 0; i < this.fragmentTypes.length; i++) {
-                    if (this.fragmentTypes[i].handle === selectedSourceHandle) {
-                        selectedGroup = this.fragmentTypes[i];
-                        break;
-                    }
-                }
-            }
+            var selectedGroup = null;
 
             this.$newFragmentBtnGroup = $('<div class="btngroup submit"/>');
             var $menuBtn;
 
-            if (selectedGroup) {
-                href = this._getGroupTriggerHref(selectedGroup);
-                label = (this.settings.context === 'index' ? Craft.t('app', 'New fragment') : Craft.t('app', 'New {group} fragment', {group: selectedGroup.name}));
-                this.$newFragmentBtn = $('<a class="btn submit add icon" ' + href + '>' + Craft.escapeHtml(label) + '</a>').appendTo(this.$newFragmentBtnGroup);
-
-                if (this.settings.context !== 'index') {
-                    this.addListener(this.$newFragmentBtn, 'click', function(ev) {
-                        this._openCreateCategoryModal(ev.currentTarget.getAttribute('data-id'));
-                    });
-                }
-
-                if (this.fragmentTypes.length > 1) {
-                    $menuBtn = $('<button/>', {
-                        type: 'button',
-                        class: 'btn submit menubtn',
-                    }).appendTo(this.$newFragmentBtnGroup);
-                }
-            } else {
-                this.$newFragmentBtn = $menuBtn = $('<button/>', {
-                    type: 'button',
-                    class: 'btn submit add icon menubtn',
-                    text: Craft.t('app', 'New fragment'),
-                }).appendTo(this.$newFragmentBtnGroup);
-            }
+            this.$newFragmentBtn = $menuBtn = $('<button/>', {
+                type: 'button',
+                class: 'btn submit add icon menubtn',
+                text: Craft.t('app', 'New fragment'),
+            }).appendTo(this.$newFragmentBtnGroup);
 
             if ($menuBtn) {
                 var menuHtml = '<div class="menu"><ul>';
