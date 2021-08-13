@@ -43,6 +43,10 @@ class FragmentQuery extends ElementQuery
         /** @var Fragment[] $fragments */
         $fragments = parent::all($db);
 
+        if (Craft::$app->request->isConsoleRequest) {
+            return $fragments;
+        }
+
         $currentUrl = Craft::$app->request->getUrl();
 
         return array_filter($fragments, function ($fragment) use ($currentUrl) {
