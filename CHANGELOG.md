@@ -1,5 +1,8 @@
 # Release Notes for Fragments
 
+## 1.0.3 - 2021-08-14
+- Fixed bug when saving fragments in single site setups. 
+
 ## 1.0.2 - 2021-08-13
 ### Fixed
 - Fixed bug in FragmentQuery trying to get current URL when current request is a console request.

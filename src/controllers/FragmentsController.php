@@ -81,6 +81,8 @@ class FragmentsController extends Controller
             if (!$site) {
                 throw new NotFoundHttpException('Invalid site handle: ' . $siteHandle);
             }
+        } else {
+            $site = Craft::$app->getSites()->getCurrentSite();
         }
 
         if (!$fragment) {
@@ -163,7 +165,12 @@ class FragmentsController extends Controller
 
         $zone = Plugin::getInstance()->zones->getZoneById($zoneId);
         $fragmentType = Plugin::getInstance()->fragmentTypes->getFragmentTypeById($fragmentTypeId);
-        $site = Craft::$app->getSites()->getSiteById($siteId);
+        if ($siteId) {
+            $site = Craft::$app->getSites()->getSiteById($siteId);
+        } else {
+            $site = Craft::$app->getSites()->getCurrentSite();
+        }
+
 
         if ($fragmentId) {
             $fragment = Fragment::find()
