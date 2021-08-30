@@ -148,7 +148,7 @@ class Fragment extends Element
         $fragmentType = $this->getFragmentType();
 
         // The slug *might* not be set if this is a Draft and they've deleted it for whatever reason
-        $path = 'fragments/fragments/' . $zone->handle . '/' . $fragmentType->handle . '/' . $this->getSourceId();
+        $path = 'fragments/fragments/' . $zone->handle . '/' . $fragmentType->handle . '/' . $this->getCanonicalId();
 
         $params = [];
         if (Craft::$app->getIsMultiSite()) {

@@ -1,5 +1,11 @@
 # Release Notes for Fragments
 
+## [Unreleased]
+
+## 1.0.5 - 2021-08-30
+### Fixed
+- Fixed deprecation warnings due to usage of element's `getSourceId()` method
+
 ## 1.0.4 - 2021-08-15
 ### Fixed
 - Fixed CHANGELOG.md
