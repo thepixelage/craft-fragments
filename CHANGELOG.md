@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 1.0.6 - 2021-09-09
+### Fixed
+- Fixed `getCanonicalId()` method not found error in CMS versions lower than 3.7
+
 ## 1.0.5 - 2021-08-30
 ### Fixed
 - Fixed deprecation warnings due to usage of element's `getSourceId()` method
