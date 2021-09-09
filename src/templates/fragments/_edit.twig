@@ -308,7 +308,7 @@
     {% if craft.app.getIsMultiSite() %}{{ hiddenInput('siteId', element.siteId) }}{% endif %}
 
     {% if not isRevision %}
-        {{ hiddenInput('sourceId', element.getCanonicalId()) }}
+        {{ hiddenInput('sourceId', sourceId) }}
     {% else %}
         {{ hiddenInput('revisionId', entry.revisionId) }}
     {% endif %}
@@ -521,7 +521,7 @@
 
 {% set settings = {
     elementType: className(element),
-    sourceId: element.getCanonicalId(),
+    sourceId: sourceId,
     siteId: element.siteId,
     isUnpublishedDraft: isUnpublishedDraft,
     enabled: element.enabled ? true : false,

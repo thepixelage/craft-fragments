@@ -134,6 +134,13 @@ class FragmentsController extends Controller
             $siteIds = [Craft::$app->getSites()->getPrimarySite()->id];
         }
 
+        $craft37 = version_compare(Craft::$app->getVersion(), '3.7', '>=');
+        if ($craft37) {
+            $sourceId = $fragment->getCanonicalId();
+        } else {
+            $sourceId = $fragment->getSourceId();
+        }
+
         return $this->renderTemplate('@fragments/fragments/_edit.twig', [
             'element' => $fragment,
             'zone' => $zone,
@@ -144,6 +151,7 @@ class FragmentsController extends Controller
             'visibilityRuleType' => $fragment->settings['visibility']['ruletype'],
             'visibilityRules' => $fragment->settings['visibility']['rules'],
             'isNew' => $fragment->id == null,
+            'sourceId' => $sourceId,
         ]);
     }
 
