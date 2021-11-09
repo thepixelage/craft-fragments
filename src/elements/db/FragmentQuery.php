@@ -117,7 +117,7 @@ class FragmentQuery extends ElementQuery
 
     protected function beforePrepare(): bool
     {
-        $fragmentsTableName = Craft::$app->db->schema->getRawTableName(Table::FRAGMENTS);
+        $fragmentsTableName = 'fragments';
         $this->joinElementTable($fragmentsTableName);
 
         $this->query->select([
@@ -132,7 +132,7 @@ class FragmentQuery extends ElementQuery
         }
 
         if (!empty($this->fragmentTypeHandle)) {
-            $fragmentTypesTableName = Craft::$app->db->schema->getRawTableName(Table::FRAGMENTTYPES);
+            $fragmentTypesTableName = 'fragmenttypes';
             $this->subQuery
                 ->innerJoin($fragmentTypesTableName, sprintf('%s.id = %s.fragmentTypeId', $fragmentTypesTableName, $fragmentsTableName))
                 ->andWhere(Db::parseParam(sprintf('%s.handle', $fragmentTypesTableName), $this->fragmentTypeHandle));
