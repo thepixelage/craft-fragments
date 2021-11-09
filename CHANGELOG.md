@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## 1.0.8 - 2021-11-09
+### Fixed
+- Fixed bug causing fragment sort order to be reset when updating an existing fragment
+
+## 1.0.7 - 2021-09-14
+### Fixed
+- Fixed error when creating fragments in installs with custom DB table prefix set up (#6).
+
 ## 1.0.6 - 2021-09-09
 ### Fixed
 - Fixed `getCanonicalId()` method not found error in CMS versions lower than 3.7
