@@ -293,9 +293,8 @@ class Fragment extends Element
             $record->settings = Json::encode($this->settings);
             $record->save(false);
 
-            if (!$this->duplicateOf) {
-                $mode = $isNew ? Structures::MODE_INSERT : Structures::MODE_AUTO;
-                Craft::$app->getStructures()->appendToRoot($this->structureId, $this, $mode);
+            if (!$this->duplicateOf && $isNew) {
+                Craft::$app->getStructures()->appendToRoot($this->structureId, $this, Structures::MODE_INSERT);
             }
         }
 
