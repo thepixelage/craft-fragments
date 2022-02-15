@@ -20,7 +20,7 @@ class Fragment extends Query
         return [
             'fragments' => [
                 'type' => Type::listOf(FragmentInterface::getType()),
-//                'args' => FragmentArguments::getArguments(),
+                'args' => FragmentArguments::getArguments(),
                 'resolve' => FragmentResolver::class . '::resolve',
                 'description' => 'This query is used to query for fragments.'
             ],
