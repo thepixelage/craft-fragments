@@ -2,7 +2,7 @@
     "name": "thepixelage/craft-fragments",
     "description": "Fragments is a Craft CMS plugin for managing content and presentational fragments",
     "type": "craft-plugin",
-    "version": "1.0.8",
+    "version": "1.1.0",
     "keywords": [
         "craft",
         "cms",
