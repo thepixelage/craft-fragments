@@ -27,6 +27,7 @@ use yii\db\Exception;
  * @property-read null|int $sourceId
  * @property-read Zone $zone
  * @property-read bool $isDeletable
+ * @property-read string $gqlTypeName
  * @property-read FragmentType $fragmentType
  */
 class Fragment extends Element
@@ -412,5 +413,39 @@ class Fragment extends Element
         }
 
         return parent::tableAttributeHtml($attribute);
+    }
+
+    public static function gqlTypeNameByContext($context): string
+    {
+        /** @var FragmentType $context */
+        return $context->handle . '_Fragment';
+    }
+
+    /**
+     * @inheritdoc
+     * @since 3.3.0
+     */
+    public static function gqlScopesByContext($context): array
+    {
+        /** @var FragmentType $context */
+        return ['fragmenttypes.' . $context->uid];
+    }
+
+    /**
+     * @inheritdoc
+     * @since 3.5.0
+     */
+    public static function gqlMutationNameByContext($context): string
+    {
+        /** @var FragmentType $context */
+        return 'save_' . $context->handle . '_Fragment';
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function getGqlTypeName(): string
+    {
+        return static::gqlTypeNameByContext($this->getFragmentType());
     }
 }

@@ -21,6 +21,7 @@ class FragmentQuery extends ElementQuery
     public ?int $zoneId;
     public ?string $zoneHandle;
     public ?bool $editable = false;
+    public ?string $currentUrl = null;
 
     public function init()
     {
@@ -47,7 +48,7 @@ class FragmentQuery extends ElementQuery
             return $fragments;
         }
 
-        $currentUrl = Craft::$app->request->getUrl();
+        $currentUrl = $this->currentUrl ?: Craft::$app->request->getUrl();
 
         return array_filter($fragments, function ($fragment) use ($currentUrl) {
             $ruleType = $fragment->settings['visibility']['ruletype'];
@@ -75,11 +76,14 @@ class FragmentQuery extends ElementQuery
         });
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function one($db = null)
     {
         $fragments = $this->all($db);
 
-        return count($fragments) > 0 ? $fragments[0] : null;
+        return count($fragments) > 0 ? reset($fragments) : null;
     }
 
     public function type($value): FragmentQuery
@@ -104,6 +108,13 @@ class FragmentQuery extends ElementQuery
         if (is_string($value)) {
             $this->zoneHandle = $value;
         }
+
+        return $this;
+    }
+
+    public function currentUrl($value): FragmentQuery
+    {
+        $this->currentUrl = $value;
 
         return $this;
     }
