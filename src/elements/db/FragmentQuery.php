@@ -83,7 +83,7 @@ class FragmentQuery extends ElementQuery
     {
         $fragments = $this->all($db);
 
-        return count($fragments) > 0 ? $fragments[0] : null;
+        return count($fragments) > 0 ? reset($fragments) : null;
     }
 
     public function type($value): FragmentQuery
