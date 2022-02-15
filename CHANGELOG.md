@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## 1.0.10 - 2022-02-15
+## 1.1.0 - 2022-02-15
 ### Added
 - Added GraphQL query for fetching a list of fragments by `type` and `zone`. Also supports passing in a `currentUrl` to return only fragments that meet the visibility rules.
 
