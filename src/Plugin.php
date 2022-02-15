@@ -5,6 +5,9 @@ namespace thepixelage\fragments;
 use Craft;
 use craft\events\DefineFieldLayoutFieldsEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterGqlQueriesEvent;
+use craft\events\RegisterGqlSchemaComponentsEvent;
+use craft\events\RegisterGqlTypesEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
@@ -13,6 +16,7 @@ use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
 use craft\services\Elements;
 use craft\services\Fields;
+use craft\services\Gql;
 use craft\services\UserPermissions;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
@@ -20,6 +24,8 @@ use craft\web\View;
 use thepixelage\fragments\behaviors\CraftVariableBehavior;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\fields\Fragments as FragmentsField;
+use thepixelage\fragments\gql\interfaces\elements\Fragment as FragmentInterface;
+use thepixelage\fragments\gql\queries\Fragment as FragmentGqlQuery;
 use thepixelage\fragments\services\Fragments;
 use thepixelage\fragments\services\FragmentTypes;
 use thepixelage\fragments\services\Zones;
@@ -60,6 +66,7 @@ class Plugin extends \craft\base\Plugin
         $this->registerProjectConfigChangeListeners();
         $this->registerFieldLayoutStandardFields();
         $this->registerUserPermissions();
+        $this->registerGql();
     }
 
     public function getSettingsResponse()
@@ -199,6 +206,49 @@ class Plugin extends \craft\base\Plugin
                             ],
                         ],
                     ];
+                }
+            }
+        );
+    }
+
+    private function registerGql()
+    {
+        Event::on(
+            Gql::class,
+            Gql::EVENT_REGISTER_GQL_QUERIES,
+            function(RegisterGqlQueriesEvent $event) {
+                $event->queries = array_merge(
+                    $event->queries,
+                    FragmentGqlQuery::getQueries()
+                );
+            }
+        );
+
+        Event::on(
+            Gql::class,
+            Gql::EVENT_REGISTER_GQL_TYPES,
+            function(RegisterGqlTypesEvent $event) {
+                $event->types[] = FragmentInterface::class;
+            }
+        );
+
+        Event::on(
+            Gql::class,
+            Gql::EVENT_REGISTER_GQL_SCHEMA_COMPONENTS,
+            function(RegisterGqlSchemaComponentsEvent $event) {
+                $fragmentTypes = $this->fragmentTypes->getAllFragmentTypes();
+
+                if (!empty($fragmentTypes)) {
+                    $queryComponents = [];
+                    foreach ($fragmentTypes as $fragmentType) {
+                        $queryComponents['fragmenttypes.' . $fragmentType->uid . ':read'] = [
+                            'label' => 'View fragment type - ' . $fragmentType->name
+                        ];
+                    }
+
+                    $event->queries = array_merge($event->queries, [
+                        'Fragments' => $queryComponents,
+                    ]);
                 }
             }
         );
