@@ -4,11 +4,14 @@ namespace thepixelage\fragments\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\MemoizableArray;
 use craft\db\Query;
 use craft\events\ConfigEvent;
 use craft\helpers\Db;
 use craft\helpers\StringHelper;
+use craft\models\CategoryGroup;
 use craft\models\FieldLayout;
+use craft\records\CategoryGroup as CategoryGroupRecord;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\models\FragmentType;
@@ -27,9 +30,15 @@ use yii\web\ServerErrorHttpException;
  */
 class FragmentTypes extends Component
 {
+    /**
+     * @var MemoizableArray<FragmentType>|null
+     * @see _types()
+     */
+    private $_types;
+
     public function getAllFragmentTypes(): array
     {
-        return $this->createFragmentTypesQuery()->all();
+        return $this->_types()->all();
     }
 
     public function getFragmentTypeById($id): ?FragmentType
@@ -192,5 +201,44 @@ class FragmentTypes extends Component
         $query = FragmentTypeRecord::find()->andWhere(['uid' => $uid]);
 
         return $query->one() ?? new FragmentTypeRecord();
+    }
+
+    private function _types(): MemoizableArray
+    {
+        if ($this->_types === null) {
+            $types = [];
+
+            /** @var FragmentTypeRecord[] $typeRecords */
+            $typeRecords = FragmentTypeRecord::find()
+                ->orderBy(['name' => SORT_ASC])
+                ->all();
+
+            foreach ($typeRecords as $typeRecord) {
+                $types[] = $this->_createFragmentTypeFromRecord($typeRecord);
+            }
+
+            $this->_types = new MemoizableArray($types);
+        }
+
+        return $this->_types;
+    }
+
+    private function _createFragmentTypeFromRecord(FragmentTypeRecord $typeRecord = null)
+    {
+        if (!$typeRecord) {
+            return null;
+        }
+
+        $type = new FragmentType($typeRecord->toArray([
+            'id',
+            'structureId',
+            'fieldLayoutId',
+            'name',
+            'handle',
+            'defaultPlacement',
+            'uid',
+        ]));
+
+        return $type;
     }
 }

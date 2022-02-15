@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 1.0.9 - 2022-02-15
+### Added
+- Added GraphQL query for fetching a list of fragments by `type` and `zone`. Also supports passing in a `currentUrl` to return only fragments that meet the visibility rules.
+
 ## 1.0.8 - 2021-11-09
 ### Fixed
 - Fixed bug causing fragment sort order to be reset when updating an existing fragment
