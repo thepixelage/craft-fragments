@@ -5,6 +5,7 @@ namespace thepixelage\fragments\elements\db;
 use Craft;
 use craft\elements\db\ElementQuery;
 use craft\helpers\Db;
+use craft\helpers\Json;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
 use yii\base\InvalidConfigException;
@@ -16,11 +17,12 @@ use yii\base\InvalidConfigException;
  */
 class FragmentQuery extends ElementQuery
 {
-    public ?int $fragmentTypeId;
-    public ?string $fragmentTypeHandle;
+    public ?string $type = null;
+    public ?int $typeId;
+    public ?string $zone = null;
     public ?int $zoneId;
-    public ?string $zoneHandle;
     public ?bool $editable = false;
+
     public ?string $currentUrl = null;
 
     public function init()
@@ -51,14 +53,20 @@ class FragmentQuery extends ElementQuery
         $currentUrl = $this->currentUrl ?: Craft::$app->request->getUrl();
 
         return array_filter($fragments, function ($fragment) use ($currentUrl) {
-            $ruleType = $fragment->settings['visibility']['ruletype'];
-            if ($ruleType == '' || count($fragment->settings['visibility']['rules']) == 0) {
+            $fragmentSettings = is_object($fragment) ? $fragment->settings : [];
+
+            if (empty($fragmentSettings) && is_array($fragment) && isset($fragment['settings'])) {
+                $fragmentSettings = Json::decode($fragment['settings']);
+            }
+
+            $ruleType = $fragmentSettings['visibility']['ruletype'];
+            if ($ruleType == '' || count($fragmentSettings['visibility']['rules']) == 0) {
                 return true;
             }
 
             $returnBool = ($ruleType == 'include');
 
-            foreach ($fragment->settings['visibility']['rules'] as $rule) {
+            foreach ($fragmentSettings['visibility']['rules'] as $rule) {
                 if (stristr($rule['uri'], '*')) {
                     $pattern = str_replace('*', '.*', $rule['uri']);
                     $pattern = str_replace('/', '\/', $pattern);
@@ -89,11 +97,11 @@ class FragmentQuery extends ElementQuery
     public function type($value): FragmentQuery
     {
         if (is_int($value)) {
-            $this->fragmentTypeId = $value;
+            $this->typeId = $value;
         }
 
         if (is_string($value)) {
-            $this->fragmentTypeHandle = $value;
+            $this->type = $value;
         }
 
         return $this;
@@ -106,7 +114,7 @@ class FragmentQuery extends ElementQuery
         }
 
         if (is_string($value)) {
-            $this->zoneHandle = $value;
+            $this->zone = $value;
         }
 
         return $this;
@@ -138,26 +146,26 @@ class FragmentQuery extends ElementQuery
             sprintf('%s.settings', $fragmentsTableName),
         ]);
 
-        if (!empty($this->fragmentTypeId)) {
-            $this->subQuery->andWhere(Db::parseParam(sprintf('%s.fragmentTypeId', $fragmentsTableName), $this->fragmentTypeId));
+        if (!empty($this->typeId)) {
+            $this->subQuery->andWhere(Db::parseParam(sprintf('%s.fragmentTypeId', $fragmentsTableName), $this->typeId));
         }
 
-        if (!empty($this->fragmentTypeHandle)) {
+        if (!empty($this->type)) {
             $fragmentTypesTableName = 'fragmenttypes';
             $this->subQuery
                 ->innerJoin($fragmentTypesTableName, sprintf('%s.id = %s.fragmentTypeId', $fragmentTypesTableName, $fragmentsTableName))
-                ->andWhere(Db::parseParam(sprintf('%s.handle', $fragmentTypesTableName), $this->fragmentTypeHandle));
+                ->andWhere(Db::parseParam(sprintf('%s.handle', $fragmentTypesTableName), $this->type));
         }
 
         if (!empty($this->zoneId)) {
             $this->subQuery->andWhere(Db::parseParam(sprintf('%s.zoneId', $fragmentsTableName), $this->zoneId));
         }
 
-        if (!empty($this->zoneHandle)) {
+        if (!empty($this->zone)) {
             $zonesTableName = Craft::$app->db->schema->getRawTableName(Table::ZONES);
             $this->subQuery
                 ->innerJoin($zonesTableName, sprintf('%s.id = %s.zoneId', $zonesTableName, $fragmentsTableName))
-                ->andWhere(Db::parseParam(sprintf('%s.handle', $zonesTableName), $this->zoneHandle));
+                ->andWhere(Db::parseParam(sprintf('%s.handle', $zonesTableName), $this->zone));
         }
 
         return parent::beforePrepare();
