@@ -157,6 +157,30 @@ like this:
 {% set fragments = craft.fragments.zone('myZoneHandle').type('myFragmentTypeHandle').all() %}
 ```
 
+## GraphQL Support
+
+GraphQL is supported from version 1.1.0. An example query is shown below:
+
+```graphql
+{
+    fragments(zone: "myZone", type: "myType", currentUrl: "/my-page") {
+        __typename
+        uid
+        title
+        ... on myFragmentType_Fragment {
+            textField
+        }
+        ... on anotherFragmentType_Fragment {
+            imageField
+        }
+    }
+}
+```
+
+The arguments `zone` and `type` work the same way as the Twig example above.
+
+Use `currentUrl` to pass in a URL that can be used to match against any fragment visibility rules that you have set up.
+
 ---
 
 Created by [ThePixelAge](https://www.thepixelage.com)
