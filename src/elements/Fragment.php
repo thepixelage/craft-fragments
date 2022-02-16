@@ -143,6 +143,14 @@ class Fragment extends Element
     /**
      * @throws InvalidConfigException
      */
+    public function getType(): FragmentType
+    {
+        return $this->getFragmentType();
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
     public function getCpEditUrl(): string
     {
         $zone = $this->getZone();

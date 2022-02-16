@@ -1,6 +1,7 @@
 # Release Notes for Fragments
 
 ## [Unreleased]
+- Allow getting the fragment type from fragment by `fragment.type` instead of `fragment.fragmentType`.
 
 ## 1.1.1 - 2022-02-16
 ### Added
