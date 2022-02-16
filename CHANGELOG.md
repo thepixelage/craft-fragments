@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## 1.1.1 - 2022-02-15
+## 1.1.1 - 2022-02-16
 ### Added
 - Added GraphQL support for Fragments field.
 
