@@ -13,12 +13,12 @@ class Fragment extends ElementArguments
             'type' => [
                 'name' => 'type',
                 'type' => Type::string(),
-                'description' => 'Type.'
+                'description' => 'Narrows the query results to only fragments of this type.'
             ],
             'zone' => [
                 'name' => 'zone',
                 'type' => Type::string(),
-                'description' => 'Zone.'
+                'description' => 'Narrows the query results to only fragments in this zone.'
             ],
             'currentUrl' => [
                 'name' => 'currentUrl',
