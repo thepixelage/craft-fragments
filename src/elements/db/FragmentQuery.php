@@ -9,6 +9,7 @@ use craft\helpers\Json;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
 use yii\base\InvalidConfigException;
+use yii\base\Model;
 
 /**
  * Class FragmentQuery
@@ -25,7 +26,7 @@ class FragmentQuery extends ElementQuery
 
     public ?string $currentUrl = null;
 
-    public function init()
+    public function init(): void
     {
         if ($this->withStructure === null) {
             $this->withStructure = true;
@@ -37,7 +38,7 @@ class FragmentQuery extends ElementQuery
     /**
      * @throws InvalidConfigException
      */
-    public function all($db = null): ?array
+    public function all($db = null): array
     {
         $currentUrl = $this->currentUrl ?: Craft::$app->request->getUrl();
 
@@ -88,7 +89,7 @@ class FragmentQuery extends ElementQuery
     /**
      * @throws InvalidConfigException
      */
-    public function one($db = null)
+    public function one($db = null): array|null|Model
     {
         $fragments = $this->all($db);
 

@@ -151,7 +151,7 @@ class Fragment extends Element
     /**
      * @throws InvalidConfigException
      */
-    public function getCpEditUrl(): string
+    public function getCpEditUrl(): ?string
     {
         $zone = $this->getZone();
         $fragmentType = $this->getFragmentType();
@@ -283,7 +283,7 @@ class Fragment extends Element
      * @throws Exception
      * @throws \yii\base\Exception
      */
-    public function afterSave(bool $isNew)
+    public function afterSave(bool $isNew): void
     {
         if (!$this->propagating) {
             if (!$isNew) {
@@ -313,7 +313,7 @@ class Fragment extends Element
     /**
      * @throws \yii\base\Exception
      */
-    public function afterRestore()
+    public function afterRestore(): void
     {
         $zone = $this->getZone();
         Craft::$app->getStructures()->appendToRoot($zone->structureId, $this);
@@ -423,7 +423,7 @@ class Fragment extends Element
         return parent::tableAttributeHtml($attribute);
     }
 
-    public static function gqlTypeNameByContext($context): string
+    public static function gqlTypeNameByContext(mixed $context): string
     {
         /** @var FragmentType $context */
         return $context->handle . '_Fragment';
@@ -433,7 +433,7 @@ class Fragment extends Element
      * @inheritdoc
      * @since 3.3.0
      */
-    public static function gqlScopesByContext($context): array
+    public static function gqlScopesByContext(mixed $context): array
     {
         /** @var FragmentType $context */
         return ['fragmenttypes.' . $context->uid];
@@ -443,7 +443,7 @@ class Fragment extends Element
      * @inheritdoc
      * @since 3.5.0
      */
-    public static function gqlMutationNameByContext($context): string
+    public static function gqlMutationNameByContext(mixed $context): string
     {
         /** @var FragmentType $context */
         return 'save_' . $context->handle . '_Fragment';

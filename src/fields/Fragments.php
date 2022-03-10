@@ -24,7 +24,7 @@ class Fragments extends BaseRelationField
         return Craft::t('fragments', "Fragments");
     }
 
-    protected static function elementType(): string
+    public static function elementType(): string
     {
         return Fragment::class;
     }
@@ -39,7 +39,7 @@ class Fragments extends BaseRelationField
         return GqlHelper::canQueryFragments();
     }
 
-    public function getContentGqlType(): array
+    public function getContentGqlType(): array|\GraphQL\Type\Definition\Type
     {
         return [
             'name' => $this->handle,

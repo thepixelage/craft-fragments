@@ -19,7 +19,7 @@ class FragmentType extends Generator implements GeneratorInterface, SingleGenera
     /**
      * @inheritdoc
      */
-    public static function generateTypes($context = null): array
+    public static function generateTypes(mixed $context = null): array
     {
         $fragmentTypes = Plugin::$plugin->fragmentTypes->getAllFragmentTypes();
         $gqlTypes = [];
@@ -41,7 +41,7 @@ class FragmentType extends Generator implements GeneratorInterface, SingleGenera
     /**
      * @inheritdoc
      */
-    public static function generateType($context): ObjectType
+    public static function generateType(mixed $context): mixed
     {
         /** @var \thepixelage\fragments\models\FragmentType $context */
         $typeName = FragmentElement::gqlTypeNameByContext($context);

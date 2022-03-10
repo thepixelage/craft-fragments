@@ -47,9 +47,9 @@ class Plugin extends \craft\base\Plugin
 {
     public static Plugin $plugin;
 
-    public $schemaVersion = '1.0.0';
-    public $hasCpSettings = true;
-    public $hasCpSection = true;
+    public string $schemaVersion = '1.0.0';
+    public bool $hasCpSettings = true;
+    public bool $hasCpSection = true;
 
     public function init()
     {
@@ -69,7 +69,7 @@ class Plugin extends \craft\base\Plugin
         $this->registerGql();
     }
 
-    public function getSettingsResponse()
+    public function getSettingsResponse(): mixed
     {
         return Craft::$app->controller->redirect(UrlHelper::cpUrl('fragments/settings'));
     }
@@ -175,7 +175,7 @@ class Plugin extends \craft\base\Plugin
 
     private function registerFieldLayoutStandardFields()
     {
-        Event::on(FieldLayout::class, FieldLayout::EVENT_DEFINE_STANDARD_FIELDS, function(DefineFieldLayoutFieldsEvent $event) {
+        Event::on(FieldLayout::class, FieldLayout::EVENT_DEFINE_NATIVE_FIELDS, function(DefineFieldLayoutFieldsEvent $event) {
             /* @var FieldLayout $fieldLayout */
             $fieldLayout = $event->sender;
 
