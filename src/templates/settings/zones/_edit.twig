@@ -1,6 +1,6 @@
 {% extends '@fragments/_layouts/settings.twig' %}
 
-{% import '_includes/forms.html' as forms %}
+{% import '_includes/forms.twig' as forms %}
 
 {% set title = "Edit Zone"|t('fragments') %}
 
@@ -77,7 +77,7 @@
         {% set siteRows = siteRows|merge({
             (site.handle): {
                 heading: site.name|t('site')|e,
-                enabled: include('_includes/forms/lightswitch.html', {
+                enabled: include('_includes/forms/lightswitch.twig', {
                     name: 'sites['~site.handle~'][enabled]',
                     on: isNew or siteSettings,
                     value: site.id,

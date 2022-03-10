@@ -1,4 +1,4 @@
-{% extends '_layouts/cp.html' %}
+{% extends '_layouts/cp.twig' %}
 {% import '_includes/forms' as forms %}
 
 {% set crumbs = [
@@ -213,7 +213,7 @@
 {% block contextMenu %}
     {% if craft.app.getIsMultiSite() %}
         {% set urlFormat = url("fragments/fragments/#{zone.handle}/#{fragmentType.handle}/#{craft.app.request.getSegment(5)}/{handle}") %}
-        {% include "_elements/sitemenu.html" with {
+        {% include "_elements/sitemenu.twig" with {
             siteIds: siteIds,
             selectedSiteId: element.siteId,
             urlFormat: urlFormat
