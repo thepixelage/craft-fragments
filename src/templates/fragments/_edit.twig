@@ -542,9 +542,6 @@
     hashedAddAnotherRedirectUrl: addAnotherRedirectUrl ? addAnotherRedirectUrl|hash : null,
     siteToken: not element.getSite().enabled ? element.siteId|hash,
 } %}
-{% js %}
-    window.draftEditor = new Craft.DraftEditor({{ settings|json_encode|raw }});
-{% endjs %}
 
 {% if not element.slug %}
     {% js %}
