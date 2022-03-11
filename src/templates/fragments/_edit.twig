@@ -341,7 +341,7 @@
                 <p>Specify the URLs to match for inclusion or exclusion.</p>
             </div>
             <div class="input ltr">
-                {{ forms.editableTable({
+                {{ forms.editableTableField({
                     id: 'visibility-rules',
                     name: 'visibility[rules]',
                     cols: {
@@ -354,7 +354,9 @@
                         },
                     }|filter,
                     rows: visibilityRules,
-                    staticRows: false,
+                    allowAdd: true,
+                    allowDelete: true,
+                    allowReorder: true,
                     errors: []|unique,
                     addRowLabel: "Add a URL"|t("fragments")
                 }) }}
@@ -543,10 +545,11 @@
     siteToken: not element.getSite().enabled ? element.siteId|hash,
 } %}
 
-{% if not element.slug %}
+{% if isNew %}
     {% js %}
-        window.slugGenerator = new Craft.SlugGenerator('#title', '#slug', {
+        new Craft.SlugGenerator('#title', '#slug', {
         charMap: {{ craft.cp.getAsciiCharMap(element.site.language)|json_encode|raw }}
         });
     {% endjs %}
+
 {% endif %}
