@@ -8,6 +8,7 @@ use craft\elements\actions\Delete;
 use craft\elements\actions\Restore;
 use craft\elements\actions\SetStatus;
 use craft\elements\db\ElementQueryInterface;
+use craft\elements\User;
 use craft\helpers\ArrayHelper;
 use craft\helpers\Json;
 use craft\helpers\UrlHelper;
@@ -26,7 +27,6 @@ use yii\db\Exception;
  *
  * @property-read null|int $sourceId
  * @property-read Zone $zone
- * @property-read bool $isDeletable
  * @property-read string $gqlTypeName
  * @property-read FragmentType $fragmentType
  */
@@ -96,12 +96,36 @@ class Fragment extends Element
         return true;
     }
 
+    public function getCrumbs(): array
+    {
+        $zone = $this->getZone();
+
+        return [
+            [
+                'label' => Craft::t('app', 'Fragments'),
+                'url' => UrlHelper::url('fragments'),
+            ],
+            [
+                'label' => Craft::t('site', $zone->name),
+                'url' => UrlHelper::url('fragments/fragments/' . $zone->handle),
+            ],
+        ];
+    }
+
     /**
      * @throws InvalidConfigException
      */
     public function getFieldLayout(): ?FieldLayout
     {
         return parent::getFieldLayout() ?? $this->getFragmentType()->getFieldLayout();
+    }
+
+    protected function metaFieldsHtml(bool $static): string
+    {
+        return implode('', [
+            $this->slugFieldHtml($static),
+            parent::metaFieldsHtml($static),
+        ]);
     }
 
     /**
@@ -164,6 +188,10 @@ class Fragment extends Element
             $sourceId = $this->getSourceId();
         }
         $path = 'fragments/fragments/' . $zone->handle . '/' . $fragmentType->handle . '/' . $sourceId;
+
+        if ($this->slug) {
+            $path .= '-' . $this->slug;
+        }
 
         $params = [];
         if (Craft::$app->getIsMultiSite()) {
@@ -262,16 +290,6 @@ class Fragment extends Element
     /**
      * @throws InvalidConfigException
      */
-    public function getIsDeletable(): bool
-    {
-        $zone = $this->getZone();
-        $userSession = Craft::$app->getUser();
-        return $userSession->checkPermission("deleteFragments:$zone->uid");
-    }
-
-    /**
-     * @throws InvalidConfigException
-     */
     public function beforeSave(bool $isNew): bool
     {
         $this->structureId = $this->getZone()->structureId;
@@ -338,6 +356,42 @@ class Fragment extends Element
         return $actions;
     }
 
+    public function canView(User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function canSave(User $user): bool
+    {
+        if (parent::canSave($user)) {
+            return true;
+        }
+
+        $zone = $this->getZone();
+
+        return $user->can("editFragments:$zone->uid");
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function canDelete(User $user): bool
+    {
+        if (parent::canDelete($user)) {
+            return true;
+        }
+
+        $zone = $this->getZone();
+
+        return $user->can("deleteFragments:$zone->uid");
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
     protected static function defineSources(string $context = null): array
     {
         $zones = Plugin::getInstance()->zones->getAllZones();
@@ -366,7 +420,7 @@ class Fragment extends Element
 
             $source['defaultSort'] = ['structure', 'asc'];
             $source['structureId'] = $zone->structureId;
-            $source['structureEditable'] = Craft::$app->getUser()->checkPermission('editFragments:' . $zone->uid);
+            $source['structureEditable'] = Craft::$app->getRequest()->getIsConsoleRequest() || Craft::$app->getUser()->checkPermission("editFragments:$zone->uid");
 
             $sources[] = $source;
         }

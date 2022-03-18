@@ -412,7 +412,10 @@ class FragmentsController extends Controller
      */
     protected function enforceDeleteFragmentPermissions(Fragment $fragment)
     {
-        if (!$fragment->getIsDeletable()) {
+        $userSession = Craft::$app->getUser()->id;
+        $user = Craft::$app->users->getUserById($userSession->id);
+
+        if (!$fragment->canDelete($user)) {
             throw new ForbiddenHttpException('User is not permitted to perform this action');
         }
     }
