@@ -193,18 +193,21 @@ class Plugin extends \craft\base\Plugin
             function(RegisterUserPermissionsEvent $event) {
                 $zones = $this->zones->getAllZones();
                 foreach ($zones as $zone) {
-                    $event->permissions['Fragment Zone - ' . $zone->name] = [
-                        ('editFragments:' . $zone->uid) => [
-                            'label' => 'Edit fragments',
-                            'nested' => [
-                                ('createFragments:' . $zone->uid) => [
-                                    'label' => 'Create fragments',
-                                ],
-                                ('deleteFragments:' . $zone->uid) => [
-                                    'label' => 'Delete fragments',
+                    $event->permissions[] = [
+                        'heading' => Craft::t('fragments', 'Fragment Zone - ' . $zone->name),
+                        'permissions' =>  [
+                            ('editFragments:' . $zone->uid) => [
+                                'label' => 'Edit fragments',
+                                'nested' => [
+                                    ('createFragments:' . $zone->uid) => [
+                                        'label' => 'Create fragments',
+                                    ],
+                                    ('deleteFragments:' . $zone->uid) => [
+                                        'label' => 'Delete fragments',
+                                    ],
                                 ],
                             ],
-                        ],
+                        ]
                     ];
                 }
             }
