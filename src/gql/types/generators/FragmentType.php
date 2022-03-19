@@ -2,12 +2,11 @@
 
 namespace thepixelage\fragments\gql\types\generators;
 
+use Craft;
 use craft\gql\base\Generator;
 use craft\gql\base\GeneratorInterface;
-use craft\gql\base\ObjectType;
 use craft\gql\base\SingleGeneratorInterface;
 use craft\gql\GqlEntityRegistry;
-use craft\gql\TypeManager;
 use craft\helpers\Gql as GqlHelper;
 use thepixelage\fragments\elements\Fragment as FragmentElement;
 use thepixelage\fragments\gql\interfaces\elements\Fragment as FragmentInterface;
@@ -47,7 +46,7 @@ class FragmentType extends Generator implements GeneratorInterface, SingleGenera
         $typeName = FragmentElement::gqlTypeNameByContext($context);
         $contentFieldGqlTypes = self::getContentFields($context);
 
-        $fragmentFields = TypeManager::prepareFieldDefinitions(
+        $fragmentFields = Craft::$app->getGql()->prepareFieldDefinitions(
             array_merge(
                 FragmentInterface::getFieldDefinitions(),
                 $contentFieldGqlTypes
