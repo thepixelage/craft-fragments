@@ -9,7 +9,10 @@ use craft\elements\actions\Restore;
 use craft\elements\actions\SetStatus;
 use craft\elements\db\ElementQueryInterface;
 use craft\elements\User;
+use craft\events\DefineHtmlEvent;
 use craft\helpers\ArrayHelper;
+use craft\helpers\Cp;
+use craft\helpers\Html;
 use craft\helpers\Json;
 use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
@@ -118,6 +121,36 @@ class Fragment extends Element
     public function getFieldLayout(): ?FieldLayout
     {
         return parent::getFieldLayout() ?? $this->getFragmentType()->getFieldLayout();
+    }
+
+    public function getSidebarHtml(bool $static): string
+    {
+        $components = [];
+
+        $metaFieldsHtml = $this->metaFieldsHtml($static);
+        if ($metaFieldsHtml !== '') {
+            $components[] = Html::tag('div', $metaFieldsHtml, ['class' => 'meta']);
+        }
+
+        if (!$static && static::hasStatuses()) {
+            // Is this a multi-site element?
+            $components[] = $this->statusFieldHtml();
+        }
+
+        if ($this->hasRevisions() && !$this->getIsRevision()) {
+            $components[] = $this->notesFieldHtml();
+        }
+
+        if ($this->id) {
+            $components[] = Cp::metadataHtml($this->getMetadata());
+        }
+
+        // Fire a defineSidebarHtml event
+        $event = new DefineHtmlEvent([
+            'html' => implode("\n", $components),
+        ]);
+        $this->trigger(self::EVENT_DEFINE_SIDEBAR_HTML, $event);
+        return $event->html;
     }
 
     protected function metaFieldsHtml(bool $static): string

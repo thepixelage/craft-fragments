@@ -129,6 +129,20 @@ class FragmentsController extends Controller
             $siteIds = array_map(function ($site) {
                 return $site['siteId'];
             }, $fragment->getSupportedSites());
+
+            if ($fragment->enabled && $fragment->id) {
+                $siteStatusesQuery = $fragment::find()
+                    ->select(['elements_sites.siteId', 'elements_sites.enabled'])
+                    ->id($fragment->id)
+                    ->siteId($siteIds)
+                    ->status(null)
+                    ->asArray();
+                $siteStatuses = array_map(fn($enabled) => (bool)$enabled, $siteStatusesQuery->pairs());
+            } else {
+                // If the element isn't saved yet, assume other sites will share its current status
+                $defaultStatus = !$fragment->id && $fragment->enabled && $fragment->getEnabledForSite();
+                $siteStatuses = array_combine($siteIds, array_map(fn() => $defaultStatus, $siteIds));
+            }
         } else {
             /* @noinspection PhpUnhandledExceptionInspection */
             $siteIds = [Craft::$app->getSites()->getPrimarySite()->id];
@@ -141,6 +155,21 @@ class FragmentsController extends Controller
             $sourceId = $fragment->getSourceId();
         }
 
+        $settingsJs = Json::encode([
+            'canEditMultipleSites' => true,
+            'canSaveCanonical' => true,
+            'canonicalId' => $sourceId,
+            'elementType' => get_class($fragment),
+            'enablePreview' => false,
+            'enabledForSite' => $fragment->enabled && $fragment->getEnabledForSite(),
+            'siteId' => $fragment->siteId,
+            'siteStatuses' => $siteStatuses,
+        ]);
+        $js = <<<JS
+new Craft.ElementEditor($('#main-form'), $settingsJs)
+JS;
+        $this->view->registerJs($js);
+
         return $this->renderTemplate('@fragments/fragments/_edit.twig', [
             'element' => $fragment,
             'zone' => $zone,
@@ -152,6 +181,7 @@ class FragmentsController extends Controller
             'visibilityRules' => $fragment->settings['visibility']['rules'],
             'isNew' => $fragment->id == null,
             'sourceId' => $sourceId,
+            'sidebarHtml' => $fragment->getSidebarHtml(false),
         ]);
     }
 
@@ -436,4 +466,6 @@ class FragmentsController extends Controller
 
         return $enabledForSite;
     }
+
+
 }

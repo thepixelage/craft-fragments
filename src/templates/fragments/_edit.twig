@@ -212,7 +212,7 @@
 
 {% block contextMenu %}
     {% if craft.app.getIsMultiSite() %}
-        {% set urlFormat = url("fragments/fragments/#{zone.handle}/#{fragmentType.handle}/#{craft.app.request.getSegment(5)}/{handle}") %}
+        {% set urlFormat = url("fragments/fragments/#{zone.handle}/#{fragmentType.handle}/#{craft.app.request.getSegment(5)}?site={handle}") %}
         {% include "_elements/sitemenu.twig" with {
             siteIds: siteIds,
             selectedSiteId: element.siteId,
@@ -367,188 +367,13 @@
 {% endblock %}
 
 {% block details %}
-    {% if settingsHtml %}
-        <div id="settings" class="meta">
-            {{ settingsHtml|raw }}
-        </div>
-    {% endif %}
-
-    {% if showStatusToggles and isMultiSiteElement %}
-        <div class="meta">
-            {{ forms.lightswitchField({
-                status: element.getAttributeStatus('enabled'),
-                label: 'Enabled for {site}'|t('app', { site: element.site.name|t('site')|e }) ~
-                (canEditMultipleSites ? tag('button', {
-                    type: 'button',
-                    id: 'expand-status-btn',
-                    class: ['btn'],
-                    data: {
-                        icon: 'ellipsis',
-                    },
-                })),
-                id: "enabledForSite-#{element.siteId}",
-                name: "enabledForSite[#{element.siteId}]",
-                on: element.enabled and element.getEnabledForSite(),
-                disabled: isRevision,
-            }) }}
-        </div>
-    {% endif %}
-
-    <div id="meta-details" class="meta read-only">
-        {% block meta %}
-            {% if element.hasStatuses() %}
-                {% if isUnpublishedDraft %}
-                    {% set statusColor = 'white' %}
-                    {% set statusLabel = 'Draft'|t('app') %}
-                {% else %}
-                    {% set status = element.getStatus() %}
-                    {% set statusDef = element.statuses()[status] ?? null %}
-                    {% set statusColor = statusDef.color ?? status %}
-                    {% set statusLabel = statusDef.label ?? statusDef ?? status|ucfirst %}
-                {% endif %}
-                <div class="data">
-                    <h5 class="heading">{{ 'Status'|t('app') }}</h5>
-                    <div id="status-value" class="value"><span class="status {{ statusColor }}"></span>{{ statusLabel }}</div>
-                </div>
-            {% endif %}
-            <div class="data">
-                <h5 class="heading">{{ "Created at"|t('app') }}</h5>
-                <div id="date-created-value" class="value">{{ element.dateCreated|datetime('short') }}</div>
-            </div>
-            <div class="data">
-                <h5 class="heading">{{ "Updated at"|t('app') }}</h5>
-                <div id="date-updated-value" class="value">{{ element.dateUpdated|datetime('short') }}</div>
-            </div>
-            {% if isRevision %}
-                {% set revisionNotes = element.revisionNotes %}
-            {% elseif not isDraft and element.currentRevision %}
-                {% set revisionNotes = element.currentRevision.revisionNotes %}
-            {% else %}
-                {% set revisionNotes = null %}
-            {% endif %}
-            {% if revisionNotes %}
-                <div class="data">
-                    <h5 class="heading">{{ "Notes"|t('app') }}</h5>
-                    <div class="value">{{ revisionNotes }}</div>
-                </div>
-            {% endif %}
-        {% endblock %}
-    </div>
-
-    {% if (isCurrent and (hasRevisions ?? false)) or isDraft %}
-        {{ forms.textarea({
-            id: 'notes',
-            class: ['nicetext'],
-            name: 'notes',
-            placeholder: 'Notes about your changes'|t('app'),
-            value: isCurrent ? (notes ?? null) : element.draftNotes,
-            inputAttributes: {
-                aria: {
-                    label: 'Notes about your changes'|t('app'),
-                },
-            },
-        }) }}
-    {% endif %}
-
-    {% if isDraft and element.getIsOutdated() %}
-        {% do craft.app.session.authorize('mergeDraftSourceChanges:' ~ element.draftId) %}
-        <div class="meta read-only warning">
-            <p>{{ 'The source {type} has been updated recently.'|t('app', {type: element.lowerDisplayName()}) }}</p>
-            <div class="flex flex-nowrap">
-                {% if element.trackChanges %}
-                    {{ tag('button', {
-                        type: 'button',
-                        id: 'merge-changes-btn',
-                        class: ['btn'],
-                        text: 'Merge changes into draft'|t('app'),
-                    }) }}
-                    <div id="merge-changes-spinner" class="spinner hidden"></div>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
+    {{ sidebarHtml|raw }}
 {% endblock %}
-
-{% block settings %}
-    {{ forms.textField({
-        label: "Slug"|t('app'),
-        siteId: element.siteId,
-        id: 'slug',
-        name: 'slug',
-        autocorrect: false,
-        autocapitalize: false,
-        value: element.slug,
-        placeholder: "Enter slug"|t('app'),
-        errors: (element.getErrors('slug')|merge(element.getErrors('uri')))
-    }) }}
-
-    {% if showStatusToggles and not isMultiSiteElement %}
-        {{ forms.lightswitchField({
-            status: element.getAttributeStatus('enabled'),
-            label: 'Enabled'|t('app'),
-            id: 'enabled',
-            name: 'enabled',
-            on: element.enabled,
-            disabled: isRevision,
-        }) }}
-    {% endif %}
-{% endblock %}
-
-{% if canEditMultipleSites and element.id %}
-    {# get the element's statuses across all sites #}
-    {% set siteStatusesQuery = element.find()
-        .select(['elements_sites.siteId', 'elements_sites.enabled'])
-        .id(element.id)
-        .siteId(propEditableSiteIds)
-        .anyStatus()
-        .asArray() %}
-    {% if isDraft %}
-        {% do siteStatusesQuery.drafts() %}
-    {% elseif isRevision %}
-        {% do siteStatusesQuery.revisions() %}
-    {% endif %}
-    {% set siteStatuses = siteStatusesQuery
-        .pairs()|map(s => s ? true : false) %}
-{% elseif canEditMultipleSites %}
-    {% set siteStatusValues = {} %}
-    {% for siteId in propEditableSiteIds %}
-        {% set siteStatusValues = siteStatusValues|merge([false]) %}
-    {% endfor %}
-    {% set siteStatuses = combine(propEditableSiteIds, siteStatusValues) %}
-{% else %}
-    {% set siteStatuses = {
-        ("#{element.siteId}"): element.enabled ? true : false
-    } %}
-{% endif %}
-
-{% set settings = {
-    elementType: className(element),
-    sourceId: sourceId,
-    siteId: element.siteId,
-    isUnpublishedDraft: isUnpublishedDraft,
-    enabled: element.enabled ? true : false,
-    enabledForSite: element.enabled and element.getEnabledForSite(),
-    isLive: isCurrent and element.enabled and element.getEnabledForSite() and element.getRoute(),
-    siteStatuses: siteStatuses,
-    addlSiteIds: addlEditableSiteIds|values,
-    cpEditUrl: element.cpEditUrl,
-    draftId: element.draftId,
-    revisionId: element.revisionId,
-    draftName: isDraft ? element.draftName : null,
-    canEditMultipleSites: canEditMultipleSites,
-    canUpdateSource: canUpdateSource,
-    saveDraftAction: saveDraftAction,
-    deleteDraftAction: deleteDraftAction,
-    publishDraftAction: publishDraftAction,
-    hashedCpEditUrl: hashedCpEditUrl,
-    hashedAddAnotherRedirectUrl: addAnotherRedirectUrl ? addAnotherRedirectUrl|hash : null,
-    siteToken: not element.getSite().enabled ? element.siteId|hash,
-} %}
 
 {% if isNew %}
     {% js %}
         new Craft.SlugGenerator('#title', '#slug', {
-        charMap: {{ craft.cp.getAsciiCharMap(element.site.language)|json_encode|raw }}
+            charMap: {{ craft.cp.getAsciiCharMap(element.site.language)|json_encode|raw }}
         });
     {% endjs %}
 
