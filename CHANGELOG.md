@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## 4.0.0-beta.1 - 2022-03-19
+- Refactor code to bring it up to Craft CMS 4 compatibility
+
 ## 1.1.2 - 2022-03-19
 - Allow getting the fragment type from fragment by `fragment.type` instead of `fragment.fragmentType`.
 
