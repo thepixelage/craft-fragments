@@ -29,6 +29,33 @@ class m220319_054550_create_condition_columns extends Migration
             $this->addColumn(Table::FRAGMENTS, 'userCondition', $this->text()->after('entryCondition'));
         }
 
+        $this->convertLegacyRules();
+
+        return true;
+    }
+
+    /**
+     * @inheritdoc
+     * @throws NotSupportedException
+     */
+    public function safeDown(): bool
+    {
+        if ($this->db->columnExists(Table::FRAGMENTS, 'entryCondition')) {
+            $this->dropColumn(Table::FRAGMENTS, 'entryCondition');
+        }
+
+        if ($this->db->columnExists(Table::FRAGMENTS, 'userCondition')) {
+            $this->dropColumn(Table::FRAGMENTS, 'userCondition');
+        }
+
+        return true;
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function convertLegacyRules(): void
+    {
         $rows = (new Query())
             ->select('*')
             ->from(Table::FRAGMENTS)
@@ -66,24 +93,5 @@ class m220319_054550_create_condition_columns extends Migration
                 );
             }
         }
-
-        return true;
-    }
-
-    /**
-     * @inheritdoc
-     * @throws NotSupportedException
-     */
-    public function safeDown(): bool
-    {
-        if ($this->db->columnExists(Table::FRAGMENTS, 'entryCondition')) {
-            $this->dropColumn(Table::FRAGMENTS, 'entryCondition');
-        }
-
-        if ($this->db->columnExists(Table::FRAGMENTS, 'userCondition')) {
-            $this->dropColumn(Table::FRAGMENTS, 'userCondition');
-        }
-
-        return true;
     }
 }
