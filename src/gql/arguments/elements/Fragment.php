@@ -23,7 +23,7 @@ class Fragment extends ElementArguments
             'entryUri' => [
                 'name' => 'entryUri',
                 'type' => Type::string(),
-                'description' => 'Current page URI to match against visibility rules, if any.'
+                'description' => 'Current page URI to match against visibility rules, if any. Empty string or single "/" will match `__home__`.'
             ],
         ]);
     }

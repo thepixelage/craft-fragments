@@ -118,6 +118,10 @@ class FragmentQuery extends ElementQuery
     {
         $this->entryUri = $value;
 
+        if (in_array(trim($this->entryUri), ['', '/'])) {
+            $this->entryUri = '__home__';
+        }
+
         return $this;
     }
 
