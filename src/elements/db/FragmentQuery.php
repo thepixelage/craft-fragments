@@ -5,9 +5,9 @@ namespace thepixelage\fragments\elements\db;
 use Craft;
 use craft\elements\db\ElementQuery;
 use craft\helpers\Db;
-use craft\helpers\Json;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
+use thepixelage\fragments\Plugin;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 
@@ -54,35 +54,20 @@ class FragmentQuery extends ElementQuery
             return $fragments;
         }
 
-        return array_filter($fragments, function ($fragment) use ($currentUrl) {
-            $fragmentSettings = is_object($fragment) ? $fragment->settings : [];
+        if ($element = Craft::$app->urlManager->getMatchedElement()) {
+            $currentEntry = Craft::$app->entries->getEntryById($element->id);
+        } else {
+            $currentEntry = null;
+        }
 
-            if (empty($fragmentSettings) && is_array($fragment) && isset($fragment['settings'])) {
-                $fragmentSettings = Json::decode($fragment['settings']);
-            }
+        if ($currentUserId = Craft::$app->getUser()->id) {
+            $currentUser = Craft::$app->users->getUserById($currentUserId);
+        } else {
+            $currentUser = null;
+        }
 
-            $ruleType = $fragmentSettings['visibility']['ruletype'];
-            if ($ruleType == '' || count($fragmentSettings['visibility']['rules']) == 0) {
-                return true;
-            }
-
-            $returnBool = ($ruleType == 'include');
-
-            foreach ($fragmentSettings['visibility']['rules'] as $rule) {
-                if (stristr($rule['uri'], '*')) {
-                    $pattern = str_replace('*', '.*', $rule['uri']);
-                    $pattern = str_replace('/', '\/', $pattern);
-                    if (preg_match("/$pattern/", $currentUrl)) {
-                        return $returnBool;
-                    }
-                } else {
-                    if ($rule['uri'] == $currentUrl) {
-                        return $returnBool;
-                    }
-                }
-            }
-
-            return !$returnBool;
+        return array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser) {
+            return Plugin::getInstance()->fragments->matchConditions($fragment, $currentEntry, $currentUser);
         });
     }
 
@@ -145,7 +130,8 @@ class FragmentQuery extends ElementQuery
             sprintf('%s.uid', $fragmentsTableName),
             sprintf('%s.zoneId', $fragmentsTableName),
             sprintf('%s.fragmentTypeId', $fragmentsTableName),
-            sprintf('%s.settings', $fragmentsTableName),
+            sprintf('%s.entryCondition', $fragmentsTableName),
+            sprintf('%s.userCondition', $fragmentsTableName),
         ]);
 
         if (!empty($this->typeId)) {

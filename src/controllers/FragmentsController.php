@@ -232,14 +232,8 @@ JS;
         $fragment->fragmentTypeId = $fragmentType->id;
         $fragment->siteId = $site->id;
 
-        $visibilitySettings = $this->request->getBodyParam('visibility', []);
-        if (is_array($visibilitySettings['rules'])) {
-            $visibilitySettings['rules'] = array_filter($visibilitySettings['rules'], function ($rule) {
-                return (isset($rule['uri']) && $rule['uri']);
-            });
-        }
-
-        $fragment->settings['visibility'] = $visibilitySettings;
+        $fragment->setEntryCondition($this->request->getBodyParam('entryCondition'));
+        $fragment->setUserCondition($this->request->getBodyParam('userCondition'));
 
         $fragment->title = $this->request->getBodyParam('title', $fragment->title);
         $fragment->slug = $this->request->getBodyParam('slug', $fragment->slug);
@@ -457,7 +451,7 @@ JS;
     {
         $enabledForSite = $this->request->getBodyParam('enabledForSite');
         if (is_array($enabledForSite)) {
-            // Make sure they are allowed to edit all of the posted site IDs
+            // Make sure they are allowed to edit all the posted site IDs
             $editableSiteIds = Craft::$app->getSites()->getEditableSiteIds();
             if (array_diff(array_keys($enabledForSite), $editableSiteIds)) {
                 throw new ForbiddenHttpException('User not permitted to edit the statuses for all the submitted site IDs');
