@@ -323,14 +323,7 @@
                 instructions: 'Create rules that allow this fragment to match the entry.'|t('fragments'),
                 errors: element.getErrors('entryCondition')
             }, element.entryCondition.getBuilderHtml()|raw ) }}
-
-            {{ forms.field({
-                label: 'Match User'|t('fragments'),
-                instructions: 'Create rules that allow this fragment to match the user.'|t('fragments'),
-                errors: element.getErrors('userCondition')
-            }, element.userCondition.getBuilderHtml()|raw ) }}
         </div>
-
     </div>
 {% endblock %}
 

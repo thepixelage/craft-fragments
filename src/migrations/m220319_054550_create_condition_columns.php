@@ -2,8 +2,10 @@
 
 namespace thepixelage\fragments\migrations;
 
-use Craft;
 use craft\db\Migration;
+use craft\db\Query;
+use craft\helpers\StringHelper;
+use Exception;
 use thepixelage\fragments\db\Table;
 use yii\base\NotSupportedException;
 
@@ -15,6 +17,7 @@ class m220319_054550_create_condition_columns extends Migration
     /**
      * @inheritdoc
      * @throws NotSupportedException
+     * @throws Exception
      */
     public function safeUp(): bool
     {
@@ -24,6 +27,44 @@ class m220319_054550_create_condition_columns extends Migration
 
         if (!$this->db->columnExists(Table::FRAGMENTS, 'userCondition')) {
             $this->addColumn(Table::FRAGMENTS, 'userCondition', $this->text()->after('entryCondition'));
+        }
+
+        $rows = (new Query())
+            ->select('*')
+            ->from(Table::FRAGMENTS)
+            ->all();
+
+        foreach ($rows as $row) {
+            $settings = json_decode($row['settings']);
+            if (is_array($settings->visibility->rules)) {
+                $newRuleString = join('|', array_map(function($rule) {
+                    return str_replace('*', '.+', $rule->uri);
+                }, $settings->visibility->rules));
+
+                $entryCondition = [
+                    'elementType' => null,
+                    'fieldContext' => 'global',
+                    'class' => 'craft\\elements\\conditions\\entries\\EntryCondition',
+                    'conditionRules' => [
+                        [
+                            'class' => 'thepixelage\\fragments\\conditions\\EntryUriConditionRule',
+                            'uid' => StringHelper::UUID(),
+                            'operator' => $settings->visibility->ruletype == 'include' ? 'REGEXMATCH' : '!REGEXMATCH',
+                            'value' => $newRuleString,
+                        ]
+                    ]
+                ];
+
+                $this->update(
+                    Table::FRAGMENTS,
+                    [
+                        'entryCondition' => str_replace('REGEXMATCH', '//', json_encode($entryCondition)),
+                    ],
+                    [
+                        'id' => $row['id'],
+                    ],
+                );
+            }
         }
 
         return true;

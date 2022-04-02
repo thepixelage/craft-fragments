@@ -513,7 +513,7 @@ class Fragment extends Element
     /**
      * @throws InvalidConfigException
      */
-    public function setEntryCondition(ElementConditionInterface|string|array $condition): void
+    public function setEntryCondition(ElementConditionInterface|string|array|null $condition): void
     {
         if (is_string($condition)) {
             $condition = Json::decodeIfJson($condition);
@@ -540,7 +540,7 @@ class Fragment extends Element
     /**
      * @throws InvalidConfigException
      */
-    public function setUserCondition(ElementConditionInterface|string|array $condition): void
+    public function setUserCondition(ElementConditionInterface|string|array|null $condition): void
     {
         if (is_string($condition)) {
             $condition = Json::decodeIfJson($condition);
