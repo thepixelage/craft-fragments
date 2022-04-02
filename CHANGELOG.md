@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## 4.0.0-beta.2 - 2022-04-02
+### Added
+- New condition rule type `EntryUriConditionRule` with regex matching operators
+
+### Changed
+- Rebuild visibility rules functionality with the new condition builder in Craft CMS 4
+- Convert legacy URL visibility rules to use the new `EntryUriConditionRule`
+- Replace GraphQL argument `currentUrl` for `fragments` query with `entryUri`
+
 ## 4.0.0-beta.1 - 2022-03-19
 - Refactor code to bring it up to Craft CMS 4 compatibility
 

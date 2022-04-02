@@ -4,10 +4,11 @@ namespace thepixelage\fragments\elements\db;
 
 use Craft;
 use craft\elements\db\ElementQuery;
+use craft\elements\Entry;
 use craft\helpers\Db;
-use craft\helpers\Json;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
+use thepixelage\fragments\Plugin;
 use yii\base\InvalidConfigException;
 use yii\base\Model;
 
@@ -24,7 +25,7 @@ class FragmentQuery extends ElementQuery
     public ?int $zoneId;
     public ?bool $editable = false;
 
-    public ?string $currentUrl = null;
+    public ?string $entryUri = null;
 
     public function init(): void
     {
@@ -40,49 +41,40 @@ class FragmentQuery extends ElementQuery
      */
     public function all($db = null): array
     {
-        $currentUrl = $this->currentUrl ?: Craft::$app->request->getUrl();
+        $entryUri = $this->entryUri ?: Craft::$app->request->getUrl();
 
         if ((Craft::$app->request->isCpRequest || Craft::$app->request->isConsoleRequest) &&
-            !$this->currentUrl) {
-            $currentUrl = null;
+            !$this->entryUri) {
+            $entryUri = null;
         }
 
         /** @var Fragment[] $fragments */
         $fragments = parent::all($db);
 
-        if ($currentUrl == null) {
+        if ($entryUri == null) {
             return $fragments;
         }
 
-        return array_filter($fragments, function ($fragment) use ($currentUrl) {
-            $fragmentSettings = is_object($fragment) ? $fragment->settings : [];
+        $element = Entry::find()->uri($entryUri)->one();
 
-            if (empty($fragmentSettings) && is_array($fragment) && isset($fragment['settings'])) {
-                $fragmentSettings = Json::decode($fragment['settings']);
+        if ($element instanceof Entry) {
+            $currentEntry = $element;
+        } else {
+            if ($element = Craft::$app->urlManager->getMatchedElement()) {
+                $currentEntry = Craft::$app->entries->getEntryById($element->id);
+            } else {
+                $currentEntry = null;
             }
+        }
 
-            $ruleType = $fragmentSettings['visibility']['ruletype'];
-            if ($ruleType == '' || count($fragmentSettings['visibility']['rules']) == 0) {
-                return true;
-            }
+        if ($currentUserId = Craft::$app->getUser()->id) {
+            $currentUser = Craft::$app->users->getUserById($currentUserId);
+        } else {
+            $currentUser = null;
+        }
 
-            $returnBool = ($ruleType == 'include');
-
-            foreach ($fragmentSettings['visibility']['rules'] as $rule) {
-                if (stristr($rule['uri'], '*')) {
-                    $pattern = str_replace('*', '.*', $rule['uri']);
-                    $pattern = str_replace('/', '\/', $pattern);
-                    if (preg_match("/$pattern/", $currentUrl)) {
-                        return $returnBool;
-                    }
-                } else {
-                    if ($rule['uri'] == $currentUrl) {
-                        return $returnBool;
-                    }
-                }
-            }
-
-            return !$returnBool;
+        return array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser) {
+            return Plugin::getInstance()->fragments->matchConditions($fragment, $currentEntry, $currentUser);
         });
     }
 
@@ -122,9 +114,13 @@ class FragmentQuery extends ElementQuery
         return $this;
     }
 
-    public function currentUrl($value): FragmentQuery
+    public function entryUri($value): FragmentQuery
     {
-        $this->currentUrl = $value;
+        $this->entryUri = $value;
+
+        if (in_array(trim($this->entryUri), ['', '/'])) {
+            $this->entryUri = '__home__';
+        }
 
         return $this;
     }
@@ -145,7 +141,8 @@ class FragmentQuery extends ElementQuery
             sprintf('%s.uid', $fragmentsTableName),
             sprintf('%s.zoneId', $fragmentsTableName),
             sprintf('%s.fragmentTypeId', $fragmentsTableName),
-            sprintf('%s.settings', $fragmentsTableName),
+            sprintf('%s.entryCondition', $fragmentsTableName),
+            sprintf('%s.userCondition', $fragmentsTableName),
         ]);
 
         if (!empty($this->typeId)) {

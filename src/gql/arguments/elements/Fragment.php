@@ -20,10 +20,10 @@ class Fragment extends ElementArguments
                 'type' => Type::string(),
                 'description' => 'Narrows the query results to only fragments in this zone.'
             ],
-            'currentUrl' => [
-                'name' => 'currentUrl',
+            'entryUri' => [
+                'name' => 'entryUri',
                 'type' => Type::string(),
-                'description' => 'Current page URL to match against visibility rules, if any.'
+                'description' => 'Current page URI to match against visibility rules, if any. Empty string or single "/" will match `__home__`.'
             ],
         ]);
     }

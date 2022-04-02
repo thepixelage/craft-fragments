@@ -8,16 +8,20 @@ use thepixelage\fragments\models\Zone;
 
 class Install extends Migration
 {
-    public function safeUp()
+    public function safeUp(): bool
     {
         $this->createTables();
         $this->createIndexes();
         $this->addForeignKeys();
+
+        return true;
     }
 
-    public function safeDown()
+    public function safeDown(): bool
     {
         $this->deleteTables();
+
+        return true;
     }
 
     private function createTables()
@@ -27,6 +31,8 @@ class Install extends Migration
             'zoneId' => $this->integer()->notNull(),
             'fragmentTypeId' => $this->integer()->notNull(),
             'settings' => $this->text(),
+            'entryCondition' => $this->text(),
+            'userCondition' => $this->text(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),
