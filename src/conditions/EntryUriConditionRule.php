@@ -16,7 +16,7 @@ class EntryUriConditionRule extends BaseTextConditionRule implements ElementCond
 
     public function getLabel(): string
     {
-        return Craft::t('app', 'Entry URI');
+        return Craft::t('app', 'URI');
     }
 
     public function getExclusiveQueryParams(): array
