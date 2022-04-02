@@ -318,6 +318,8 @@
         {{ form.render()|raw }}
 
         <div id="visibility-rules" class="hidden">
+            <div>Set up condition rules below to limit when this fragment should be visible. If no rules are added, this fragment will be visible to all cases.</div>
+
             {{ forms.field({
                 label: 'Match Entry'|t('fragments'),
                 instructions: 'Create rules that allow this fragment to match the entry.'|t('fragments'),
