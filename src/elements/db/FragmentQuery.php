@@ -4,6 +4,7 @@ namespace thepixelage\fragments\elements\db;
 
 use Craft;
 use craft\elements\db\ElementQuery;
+use craft\elements\Entry;
 use craft\helpers\Db;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
@@ -24,7 +25,7 @@ class FragmentQuery extends ElementQuery
     public ?int $zoneId;
     public ?bool $editable = false;
 
-    public ?string $currentUrl = null;
+    public ?string $entryUri = null;
 
     public function init(): void
     {
@@ -40,24 +41,30 @@ class FragmentQuery extends ElementQuery
      */
     public function all($db = null): array
     {
-        $currentUrl = $this->currentUrl ?: Craft::$app->request->getUrl();
+        $entryUri = $this->entryUri ?: Craft::$app->request->getUrl();
 
         if ((Craft::$app->request->isCpRequest || Craft::$app->request->isConsoleRequest) &&
-            !$this->currentUrl) {
-            $currentUrl = null;
+            !$this->entryUri) {
+            $entryUri = null;
         }
 
         /** @var Fragment[] $fragments */
         $fragments = parent::all($db);
 
-        if ($currentUrl == null) {
+        if ($entryUri == null) {
             return $fragments;
         }
 
-        if ($element = Craft::$app->urlManager->getMatchedElement()) {
-            $currentEntry = Craft::$app->entries->getEntryById($element->id);
+        $element = Entry::find()->uri($entryUri)->one();
+
+        if ($element instanceof Entry) {
+            $currentEntry = $element;
         } else {
-            $currentEntry = null;
+            if ($element = Craft::$app->urlManager->getMatchedElement()) {
+                $currentEntry = Craft::$app->entries->getEntryById($element->id);
+            } else {
+                $currentEntry = null;
+            }
         }
 
         if ($currentUserId = Craft::$app->getUser()->id) {
@@ -107,9 +114,9 @@ class FragmentQuery extends ElementQuery
         return $this;
     }
 
-    public function currentUrl($value): FragmentQuery
+    public function entryUri($value): FragmentQuery
     {
-        $this->currentUrl = $value;
+        $this->entryUri = $value;
 
         return $this;
     }
