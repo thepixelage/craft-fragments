@@ -53,6 +53,7 @@ class m220319_054550_create_condition_columns extends Migration
 
     /**
      * @throws Exception
+     * @noinspection PhpUnnecessaryLocalVariableInspection
      */
     private function convertLegacyRules(): void
     {
@@ -65,7 +66,13 @@ class m220319_054550_create_condition_columns extends Migration
             $settings = json_decode($row['settings']);
             if (is_array($settings->visibility->rules)) {
                 $newRuleString = join('|', array_map(function($rule) {
-                    return str_replace('*', '.+', $rule->uri);
+                    $replaced = preg_replace('/^\//', '', $rule->uri);
+                    $replaced = str_replace('/', '\/', $replaced);
+                    $replaced = str_replace('?', '\?', $replaced);
+                    $replaced = str_replace('.', '\.', $replaced);
+                    $replaced = str_replace('+', '\+', $replaced);
+                    $replaced = str_replace('*', '.+', $replaced);
+                    return $replaced;
                 }, $settings->visibility->rules));
 
                 $entryCondition = [
