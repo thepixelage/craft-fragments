@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 4.0.0-beta.3 - 2022-04-03
+### Fixed
+- Fixed issues with converting legacy URL rules that contain regex sensitive characters
+
 ## 4.0.0-beta.2 - 2022-04-02
 ### Added
 - New condition rule type `EntryUriConditionRule` with regex matching operators
