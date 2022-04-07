@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 4.0.0-beta.4 - 2022-04-07
+### Fixed
+- Fixed error caused by undefined `$siteStatuses` variable in single-site instances
+
 ## 4.0.0-beta.3 - 2022-04-03
 ### Fixed
 - Fixed issues with converting legacy URL rules that contain regex sensitive characters
