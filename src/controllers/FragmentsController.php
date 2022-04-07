@@ -146,6 +146,7 @@ class FragmentsController extends Controller
         } else {
             /* @noinspection PhpUnhandledExceptionInspection */
             $siteIds = [Craft::$app->getSites()->getPrimarySite()->id];
+            $siteStatuses = [];
         }
 
         $craft37 = version_compare(Craft::$app->getVersion(), '3.7', '>=');
