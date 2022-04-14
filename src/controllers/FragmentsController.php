@@ -203,11 +203,12 @@ class FragmentsController extends Controller
         $fragment->siteId = $site->id;
 
         $visibilitySettings = $this->request->getBodyParam('visibility', []);
-        if (is_array($visibilitySettings['rules'])) {
-            $visibilitySettings['rules'] = array_filter($visibilitySettings['rules'], function ($rule) {
-                return (isset($rule['uri']) && $rule['uri']);
-            });
+        if (!is_array($visibilitySettings['rules'])) {
+            $visibilitySettings['rules'] = [];
         }
+        $visibilitySettings['rules'] = array_filter($visibilitySettings['rules'], function ($rule) {
+            return (isset($rule['uri']) && $rule['uri']);
+        });
 
         $fragment->settings['visibility'] = $visibilitySettings;
 

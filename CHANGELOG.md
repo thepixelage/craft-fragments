@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 1.1.3 - 2022-04-14
+### Fixed
+- Fixed bug caused when eager loading Fragments field if visibility rule type is set but no URL rules are set (#20). Existing fragments will need to be resaved to rectify this. 
+
 ## 1.1.2 - 2022-03-19
 - Allow getting the fragment type from fragment by `fragment.type` instead of `fragment.fragmentType`.
 
