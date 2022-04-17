@@ -25,6 +25,11 @@ class Fragment extends ElementArguments
                 'type' => Type::string(),
                 'description' => 'Current page URI to match against visibility rules, if any. Empty string or single "/" will match `__home__`.'
             ],
+            'entryId' => [
+                'name' => 'entryId',
+                'type' => Type::int(),
+                'description' => 'Current entry ID to match against visibility rules, if any.'
+            ],
             'userId' => [
                 'name' => 'userId',
                 'type' => Type::int(),
@@ -33,7 +38,7 @@ class Fragment extends ElementArguments
             'requestProps' => [
                 'name' => 'requestProps',
                 'type' => Type::string(),
-                'description' => 'Current request to match against visibility rules, if any.'
+                'description' => 'Current request to match against visibility rules, if any. Expects a JSON encoded string that will be parsed into a `stdClass` object.'
             ],
         ]);
     }

@@ -3,9 +3,11 @@
 namespace thepixelage\fragments\elements\db;
 
 use Craft;
+use craft\controllers\GraphqlController;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
 use craft\helpers\Db;
+use craft\helpers\StringHelper;
 use craft\web\Request;
 use stdClass;
 use thepixelage\fragments\db\Table;
@@ -28,6 +30,7 @@ class FragmentQuery extends ElementQuery
     public ?bool $editable = false;
 
     public ?string $entryUri = null;
+    public ?int $entryId = null;
     public ?int $userId = null;
     public ?stdClass $requestProps = null;
 
@@ -45,20 +48,21 @@ class FragmentQuery extends ElementQuery
      */
     public function all($db = null): array
     {
-        $entryUri = $this->entryUri ?: Craft::$app->request->getUrl();
+        $currentEntry = null;
+        $currentUser = null;
+        $currentRequest = null;
+        $entryUri = null;
 
-        if ((Craft::$app->request->isCpRequest || Craft::$app->request->isConsoleRequest) &&
-            !$this->entryUri) {
-            $entryUri = null;
+        if ($this->entryUri) {
+            $entryUri = $this->entryUri;
         }
 
-        /** @var Fragment[] $fragments */
-        $fragments = parent::all($db);
+        if (!$entryUri && !(Craft::$app->request->isCpRequest || Craft::$app->request->isConsoleRequest)) {
+            $entryUri = Craft::$app->request->getUrl();
+        }
 
-        $currentEntry = null;
         if ($entryUri) {
             $element = Entry::find()->uri($entryUri)->one();
-
             if ($element instanceof Entry) {
                 $currentEntry = $element;
             } else {
@@ -68,7 +72,10 @@ class FragmentQuery extends ElementQuery
             }
         }
 
-        $currentUser = null;
+        if ($this->entryId) {
+            $currentEntry = Craft::$app->entries->getEntryById($this->entryId);
+        }
+
         if ($this->userId) {
             $currentUser = Craft::$app->users->getUserById($this->userId);
         } else {
@@ -77,9 +84,15 @@ class FragmentQuery extends ElementQuery
             }
         }
 
-        $currentRequest = null;
         if ($this->requestProps) {
             $currentRequest = $this->requestProps;
+        }
+
+        /** @var Fragment[] $fragments */
+        $fragments = parent::all($db);
+
+        if ((Craft::$app->request->isCpRequest || Craft::$app->request->isConsoleRequest) && !(Craft::$app->controller instanceof GraphqlController)) {
+            return $fragments;
         }
 
         return array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser, $currentRequest) {
@@ -130,6 +143,13 @@ class FragmentQuery extends ElementQuery
         if (in_array(trim($this->entryUri), ['', '/'])) {
             $this->entryUri = '__home__';
         }
+
+        return $this;
+    }
+
+    public function entryId($value): FragmentQuery
+    {
+        $this->entryId = $value;
 
         return $this;
     }
@@ -192,5 +212,10 @@ class FragmentQuery extends ElementQuery
         }
 
         return parent::beforePrepare();
+    }
+
+    protected function isCpOrConsoleRequest()
+    {
+
     }
 }
