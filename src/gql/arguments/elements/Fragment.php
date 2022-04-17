@@ -25,6 +25,16 @@ class Fragment extends ElementArguments
                 'type' => Type::string(),
                 'description' => 'Current page URI to match against visibility rules, if any. Empty string or single "/" will match `__home__`.'
             ],
+            'userId' => [
+                'name' => 'userId',
+                'type' => Type::int(),
+                'description' => 'Current user ID to match against visibility rules, if any.'
+            ],
+            'requestProps' => [
+                'name' => 'requestProps',
+                'type' => Type::string(),
+                'description' => 'Current request to match against visibility rules, if any.'
+            ],
         ]);
     }
 }

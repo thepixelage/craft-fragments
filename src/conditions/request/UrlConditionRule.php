@@ -7,12 +7,12 @@ use craft\base\conditions\BaseTextConditionRule;
 use craft\base\ElementInterface;
 use craft\elements\conditions\ElementConditionRuleInterface;
 use craft\elements\db\ElementQueryInterface;
+use stdClass;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 
 class UrlConditionRule extends BaseTextConditionRule implements ElementConditionRuleInterface
 {
-
     public function getLabel(): string
     {
         return Craft::t('app', 'URL');
@@ -34,9 +34,13 @@ class UrlConditionRule extends BaseTextConditionRule implements ElementCondition
     /**
      * @throws InvalidConfigException
      */
-    public function matchElement(ElementInterface $element = null): bool
+    public function matchElement(ElementInterface $element = null, stdClass $request = null): bool
     {
-        $request = Craft::$app->getRequest();
+        $request = $request ?: Craft::$app->getRequest();
+        if (!isset($request->url)) {
+            return false;
+        }
+
         $this->value = strtolower($this->value);
         $url = strtolower($request->url);
 

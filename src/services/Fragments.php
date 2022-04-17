@@ -5,6 +5,7 @@ namespace thepixelage\fragments\services;
 use craft\base\Component;
 use craft\elements\Entry;
 use craft\elements\User;
+use stdClass;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\Plugin;
 use yii\base\InvalidConfigException;
@@ -22,7 +23,7 @@ class Fragments extends Component
     /**
      * @throws InvalidConfigException
      */
-    public function matchConditions(Fragment $fragment, Entry $entry = null, User $user = null): bool
+    public function matchConditions(Fragment $fragment, Entry $entry = null, User $user = null, stdClass $request = null): bool
     {
         if ($entryCondition = $fragment->getEntryCondition()) {
             if (count($entryCondition->getConditionRules()) > 0) {
@@ -56,7 +57,7 @@ class Fragments extends Component
         if ($requestCondition = $fragment->getRequestCondition()) {
             if (count($requestCondition->getConditionRules()) > 0) {
                 foreach ($requestCondition->getConditionRules() as $rule) {
-                    if (!$rule->matchElement()) {
+                    if (!$rule->matchElement(null, $request)) {
                         return false;
                     }
                 }

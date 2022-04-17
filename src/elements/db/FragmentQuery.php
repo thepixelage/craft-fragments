@@ -6,6 +6,8 @@ use Craft;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
 use craft\helpers\Db;
+use craft\web\Request;
+use stdClass;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\Plugin;
@@ -26,6 +28,8 @@ class FragmentQuery extends ElementQuery
     public ?bool $editable = false;
 
     public ?string $entryUri = null;
+    public ?int $userId = null;
+    public ?stdClass $requestProps = null;
 
     public function init(): void
     {
@@ -51,30 +55,35 @@ class FragmentQuery extends ElementQuery
         /** @var Fragment[] $fragments */
         $fragments = parent::all($db);
 
-        if ($entryUri == null) {
-            return $fragments;
-        }
+        $currentEntry = null;
+        if ($entryUri) {
+            $element = Entry::find()->uri($entryUri)->one();
 
-        $element = Entry::find()->uri($entryUri)->one();
-
-        if ($element instanceof Entry) {
-            $currentEntry = $element;
-        } else {
-            if ($element = Craft::$app->urlManager->getMatchedElement()) {
-                $currentEntry = Craft::$app->entries->getEntryById($element->id);
+            if ($element instanceof Entry) {
+                $currentEntry = $element;
             } else {
-                $currentEntry = null;
+                if ($element = Craft::$app->urlManager->getMatchedElement()) {
+                    $currentEntry = Craft::$app->entries->getEntryById($element->id);
+                }
             }
         }
 
-        if ($currentUserId = Craft::$app->getUser()->id) {
-            $currentUser = Craft::$app->users->getUserById($currentUserId);
+        $currentUser = null;
+        if ($this->userId) {
+            $currentUser = Craft::$app->users->getUserById($this->userId);
         } else {
-            $currentUser = null;
+            if ($currentUserId = Craft::$app->getUser()->id) {
+                $currentUser = Craft::$app->users->getUserById($currentUserId);
+            }
         }
 
-        return array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser) {
-            return Plugin::getInstance()->fragments->matchConditions($fragment, $currentEntry, $currentUser);
+        $currentRequest = null;
+        if ($this->requestProps) {
+            $currentRequest = $this->requestProps;
+        }
+
+        return array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser, $currentRequest) {
+            return Plugin::getInstance()->fragments->matchConditions($fragment, $currentEntry, $currentUser, $currentRequest);
         });
     }
 
@@ -121,6 +130,20 @@ class FragmentQuery extends ElementQuery
         if (in_array(trim($this->entryUri), ['', '/'])) {
             $this->entryUri = '__home__';
         }
+
+        return $this;
+    }
+
+    public function userId($value): FragmentQuery
+    {
+        $this->userId = $value;
+
+        return $this;
+    }
+
+    public function requestProps($value): FragmentQuery
+    {
+        $this->requestProps = json_decode($value);
 
         return $this;
     }
