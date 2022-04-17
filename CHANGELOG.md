@@ -6,6 +6,7 @@
 ### Added
 - Added new `FragmentEntryCondition` to avoid rule type clashes with the native `EntryCondition`
 - Added new request condition rule types
+- Added GraphQL arguments to `fragments` query for specifying current user and current request props
 
 ## 4.0.0-beta.4 - 2022-04-07
 ### Fixed
