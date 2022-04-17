@@ -7,8 +7,6 @@ use craft\controllers\GraphqlController;
 use craft\elements\db\ElementQuery;
 use craft\elements\Entry;
 use craft\helpers\Db;
-use craft\helpers\StringHelper;
-use craft\web\Request;
 use stdClass;
 use thepixelage\fragments\db\Table;
 use thepixelage\fragments\elements\Fragment;
