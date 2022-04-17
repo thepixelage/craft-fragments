@@ -37,7 +37,9 @@ class ReferrerConditionRule extends BaseTextConditionRule implements ElementCond
     public function matchElement(ElementInterface $element = null): bool
     {
         $request = Craft::$app->getRequest();
+        $this->value = strtolower($this->value);
+        $referrer = strtolower($request->referrer);
 
-        return $this->matchValue($request->referrer);
+        return $this->matchValue($referrer);
     }
 }

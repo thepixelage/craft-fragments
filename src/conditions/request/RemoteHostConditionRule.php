@@ -37,7 +37,9 @@ class RemoteHostConditionRule extends BaseTextConditionRule implements ElementCo
     public function matchElement(ElementInterface $element = null): bool
     {
         $request = Craft::$app->getRequest();
+        $this->value = strtolower($this->value);
+        $remoteHost = strtolower($request->remoteHost);
 
-        return $this->matchValue($request->remoteHost);
+        return $this->matchValue($remoteHost);
     }
 }

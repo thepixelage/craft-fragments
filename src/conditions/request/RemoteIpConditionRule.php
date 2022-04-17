@@ -37,7 +37,9 @@ class RemoteIpConditionRule extends BaseTextConditionRule implements ElementCond
     public function matchElement(ElementInterface $element = null): bool
     {
         $request = Craft::$app->getRequest();
+        $this->value = strtolower($this->value);
+        $remoteIP = strtolower($request->remoteIP);
 
-        return $this->matchValue($request->remoteIP);
+        return $this->matchValue($remoteIP);
     }
 }

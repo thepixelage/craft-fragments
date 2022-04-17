@@ -37,7 +37,9 @@ class UserAgentConditionRule extends BaseTextConditionRule implements ElementCon
     public function matchElement(ElementInterface $element = null): bool
     {
         $request = Craft::$app->getRequest();
+        $this->value = strtolower($this->value);
+        $userAgent = strtolower($request->userAgent);
 
-        return $this->matchValue($request->userAgent);
+        return $this->matchValue($userAgent);
     }
 }

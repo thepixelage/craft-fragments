@@ -37,7 +37,9 @@ class UrlConditionRule extends BaseTextConditionRule implements ElementCondition
     public function matchElement(ElementInterface $element = null): bool
     {
         $request = Craft::$app->getRequest();
+        $this->value = strtolower($this->value);
+        $url = strtolower($request->url);
 
-        return $this->matchValue($request->url);
+        return $this->matchValue($url);
     }
 }

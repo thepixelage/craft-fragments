@@ -53,6 +53,16 @@ class Fragments extends Component
 
         }
 
+        if ($requestCondition = $fragment->getRequestCondition()) {
+            if (count($requestCondition->getConditionRules()) > 0) {
+                foreach ($requestCondition->getConditionRules() as $rule) {
+                    if (!$rule->matchElement()) {
+                        return false;
+                    }
+                }
+            }
+        }
+
         return true;
     }
 }
