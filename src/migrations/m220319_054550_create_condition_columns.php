@@ -78,7 +78,7 @@ class m220319_054550_create_condition_columns extends Migration
                 $entryCondition = [
                     'elementType' => null,
                     'fieldContext' => 'global',
-                    'class' => 'craft\\elements\\conditions\\entries\\EntryCondition',
+                    'class' => 'thepixelage\\fragments\\conditions\\FragmentEntryCondition',
                     'conditionRules' => [
                         [
                             'class' => 'thepixelage\\fragments\\conditions\\EntryUriConditionRule',

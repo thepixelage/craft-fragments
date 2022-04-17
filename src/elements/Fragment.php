@@ -8,7 +8,6 @@ use craft\elements\actions\Delete;
 use craft\elements\actions\Restore;
 use craft\elements\actions\SetStatus;
 use craft\elements\conditions\ElementConditionInterface;
-use craft\elements\conditions\entries\EntryCondition;
 use craft\elements\conditions\users\UserCondition;
 use craft\elements\db\ElementQueryInterface;
 use craft\elements\User;
@@ -21,6 +20,7 @@ use craft\helpers\UrlHelper;
 use craft\models\FieldLayout;
 use craft\models\Site;
 use craft\services\Structures;
+use thepixelage\fragments\conditions\FragmentEntryCondition;
 use thepixelage\fragments\elements\db\FragmentQuery;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\models\Zone;
@@ -503,7 +503,7 @@ class Fragment extends Element
 
     public function getEntryCondition(): ElementConditionInterface
     {
-        $condition = $this->_entryCondition ?? new EntryCondition();
+        $condition = $this->_entryCondition ?? new FragmentEntryCondition();
         $condition->mainTag = 'div';
         $condition->name = 'entryCondition';
 
@@ -520,7 +520,7 @@ class Fragment extends Element
         }
 
         if (!$condition instanceof ElementConditionInterface) {
-            $condition['class'] = EntryCondition::class;
+            $condition['class'] = FragmentEntryCondition::class;
             $condition = Craft::$app->getConditions()->createCondition($condition);
         }
         $condition->forProjectConfig = false;

@@ -1,6 +1,8 @@
 # Release Notes for Fragments
 
 ## [Unreleased]
+### Added
+- Added new `FragmentEntryCondition` to avoid rule type clashes with the native `EntryCondition`
 
 ## 4.0.0-beta.4 - 2022-04-07
 ### Fixed

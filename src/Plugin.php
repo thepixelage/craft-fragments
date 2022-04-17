@@ -3,10 +3,8 @@
 namespace thepixelage\fragments;
 
 use Craft;
-use craft\elements\conditions\entries\EntryCondition;
 use craft\events\DefineFieldLayoutFieldsEvent;
 use craft\events\RegisterComponentTypesEvent;
-use craft\events\RegisterConditionRuleTypesEvent;
 use craft\events\RegisterGqlQueriesEvent;
 use craft\events\RegisterGqlSchemaComponentsEvent;
 use craft\events\RegisterGqlTypesEvent;
@@ -24,7 +22,6 @@ use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
 use thepixelage\fragments\behaviors\CraftVariableBehavior;
-use thepixelage\fragments\conditions\EntryUriConditionRule;
 use thepixelage\fragments\elements\Fragment;
 use thepixelage\fragments\fields\Fragments as FragmentsField;
 use thepixelage\fragments\gql\interfaces\elements\Fragment as FragmentInterface;
@@ -70,7 +67,6 @@ class Plugin extends \craft\base\Plugin
         $this->registerFieldLayoutStandardFields();
         $this->registerUserPermissions();
         $this->registerGql();
-        $this->registerConditionRules();
     }
 
     public function getSettingsResponse(): mixed
@@ -257,19 +253,6 @@ class Plugin extends \craft\base\Plugin
                         'Fragments' => $queryComponents,
                     ]);
                 }
-            }
-        );
-    }
-
-    private function registerConditionRules(): void
-    {
-        Event::on(
-            EntryCondition::class,
-            EntryCondition::EVENT_REGISTER_CONDITION_RULE_TYPES,
-            function (RegisterConditionRuleTypesEvent $event) {
-                $ruleTypes = $event->conditionRuleTypes;
-                $ruleTypes[] = EntryUriConditionRule::class;
-                $event->conditionRuleTypes = $ruleTypes;
             }
         );
     }
