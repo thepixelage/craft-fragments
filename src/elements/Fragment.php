@@ -8,7 +8,6 @@ use craft\elements\actions\Delete;
 use craft\elements\actions\Restore;
 use craft\elements\actions\SetStatus;
 use craft\elements\conditions\ElementConditionInterface;
-use craft\elements\conditions\users\UserCondition;
 use craft\elements\db\ElementQueryInterface;
 use craft\elements\User;
 use craft\events\DefineHtmlEvent;
@@ -21,6 +20,8 @@ use craft\models\FieldLayout;
 use craft\models\Site;
 use craft\services\Structures;
 use thepixelage\fragments\conditions\FragmentEntryCondition;
+use thepixelage\fragments\conditions\FragmentRequestCondition;
+use thepixelage\fragments\conditions\FragmentUserCondition;
 use thepixelage\fragments\elements\db\FragmentQuery;
 use thepixelage\fragments\models\FragmentType;
 use thepixelage\fragments\models\Zone;
@@ -43,6 +44,7 @@ class Fragment extends Element
     public ?array $settings = [];
     public ElementConditionInterface|null $_entryCondition = null;
     public ElementConditionInterface|null $_userCondition = null;
+    public ElementConditionInterface|null $_requestCondition = null;
 
     public function __construct($config = [])
     {
@@ -342,6 +344,7 @@ class Fragment extends Element
             $record->fragmentTypeId = (int)$this->fragmentTypeId;
             $record->entryCondition = $this->getEntryCondition()->getConfig();
             $record->userCondition = $this->getUserCondition()->getConfig();
+            $record->requestCondition = $this->getRequestCondition()->getConfig();
             $record->save(false);
 
             if (!$this->duplicateOf && $isNew) {
@@ -530,7 +533,7 @@ class Fragment extends Element
 
     public function getUserCondition(): ElementConditionInterface
     {
-        $condition = $this->_userCondition ?? new UserCondition();
+        $condition = $this->_userCondition ?? new FragmentUserCondition();
         $condition->mainTag = 'div';
         $condition->name = 'userCondition';
 
@@ -547,12 +550,39 @@ class Fragment extends Element
         }
 
         if (!$condition instanceof ElementConditionInterface) {
-            $condition['class'] = UserCondition::class;
+            $condition['class'] = FragmentUserCondition::class;
             $condition = Craft::$app->getConditions()->createCondition($condition);
         }
         $condition->forProjectConfig = false;
 
         $this->_userCondition = $condition;
+    }
+
+    public function getRequestCondition(): ElementConditionInterface
+    {
+        $condition = $this->_requestCondition ?? new FragmentRequestCondition();
+        $condition->mainTag = 'div';
+        $condition->name = 'requestCondition';
+
+        return $condition;
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function setRequestCondition(ElementConditionInterface|string|array|null $condition): void
+    {
+        if (is_string($condition)) {
+            $condition = Json::decodeIfJson($condition);
+        }
+
+        if (!$condition instanceof ElementConditionInterface) {
+            $condition['class'] = FragmentRequestCondition::class;
+            $condition = Craft::$app->getConditions()->createCondition($condition);
+        }
+        $condition->forProjectConfig = false;
+
+        $this->_requestCondition = $condition;
     }
 
     public static function gqlTypeNameByContext(mixed $context): string

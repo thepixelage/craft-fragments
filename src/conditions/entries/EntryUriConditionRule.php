@@ -1,6 +1,6 @@
 <?php
 
-namespace thepixelage\fragments\conditions;
+namespace thepixelage\fragments\conditions\entries;
 
 use Craft;
 use craft\base\conditions\BaseTextConditionRule;
@@ -46,7 +46,6 @@ class EntryUriConditionRule extends BaseTextConditionRule implements ElementCond
         return ($this->operator == self::OPERATOR_REGEX_NOTMATCH) ? !$match : $match;
     }
 
-    /** @noinspection PhpPureAttributeCanBeAddedInspection */
     protected function operators(): array
     {
         return array_merge(parent::operators(), [self::OPERATOR_REGEX_MATCH, self::OPERATOR_REGEX_NOTMATCH]);

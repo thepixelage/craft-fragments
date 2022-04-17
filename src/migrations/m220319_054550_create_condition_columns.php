@@ -81,7 +81,7 @@ class m220319_054550_create_condition_columns extends Migration
                     'class' => 'thepixelage\\fragments\\conditions\\FragmentEntryCondition',
                     'conditionRules' => [
                         [
-                            'class' => 'thepixelage\\fragments\\conditions\\EntryUriConditionRule',
+                            'class' => 'thepixelage\\fragments\\conditions\\entries\\EntryUriConditionRule',
                             'uid' => StringHelper::UUID(),
                             'operator' => $settings->visibility->ruletype == 'include' ? 'REGEXMATCH' : '!REGEXMATCH',
                             'value' => $newRuleString,

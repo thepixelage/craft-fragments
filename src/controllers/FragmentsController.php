@@ -235,6 +235,7 @@ JS;
 
         $fragment->setEntryCondition($this->request->getBodyParam('entryCondition'));
         $fragment->setUserCondition($this->request->getBodyParam('userCondition'));
+        $fragment->setRequestCondition($this->request->getBodyParam('requestCondition'));
 
         $fragment->title = $this->request->getBodyParam('title', $fragment->title);
         $fragment->slug = $this->request->getBodyParam('slug', $fragment->slug);

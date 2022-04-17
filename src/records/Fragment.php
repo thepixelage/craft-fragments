@@ -14,6 +14,7 @@ use yii\db\ActiveQueryInterface;
  * @property string $settings Settings
  * @property string $entryCondition Entry condition
  * @property string $userCondition User condition
+ * @property string $requestCondition Request condition
  * @property Element $element Element
  * @property Zone $zone Zone
  * @property-read ActiveQueryInterface $fragmentType

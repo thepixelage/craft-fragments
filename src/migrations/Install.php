@@ -33,6 +33,7 @@ class Install extends Migration
             'settings' => $this->text(),
             'entryCondition' => $this->text(),
             'userCondition' => $this->text(),
+            'requestCondition' => $this->text(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),

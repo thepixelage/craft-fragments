@@ -143,6 +143,7 @@ class FragmentQuery extends ElementQuery
             sprintf('%s.fragmentTypeId', $fragmentsTableName),
             sprintf('%s.entryCondition', $fragmentsTableName),
             sprintf('%s.userCondition', $fragmentsTableName),
+            sprintf('%s.requestCondition', $fragmentsTableName),
         ]);
 
         if (!empty($this->typeId)) {
