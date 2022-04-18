@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 4.0.0-beta.6 - 2022-04-18
+### Fixed
+- Fixed issue of migrations not running by bumping up `$schemaVersion`
+
 ## 4.0.0-beta.5 - 2022-04-17
 ### Added
 - Added new `FragmentEntryCondition` to avoid rule type clashes with the native `EntryCondition`
