@@ -2,7 +2,7 @@
     "name": "thepixelage/craft-fragments",
     "description": "Fragments is a Craft CMS plugin for managing content and presentational fragments",
     "type": "craft-plugin",
-    "version": "4.0.0-beta.6",
+    "version": "4.0.0",
     "keywords": [
         "craft",
         "cms",
@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "craftcms/cms": "^4.0.0-beta",
+        "craftcms/cms": "^4.0.0",
         "ext-json": "*"
     },
     "autoload": {

@@ -2,36 +2,24 @@
 
 ## [Unreleased]
 
-## 4.0.0-beta.6 - 2022-04-18
-### Fixed
-- Fixed issue of migrations not running by bumping up `$schemaVersion`
-
-## 4.0.0-beta.5 - 2022-04-17
-### Added
-- Added new `FragmentEntryCondition` to avoid rule type clashes with the native `EntryCondition`
-- Added new request condition rule types
-- Added user and request conditions in Visibility Rules condition builder
-- Added GraphQL arguments to `fragments` query for specifying current user and current request props
-
-## 4.0.0-beta.4 - 2022-04-07
-### Fixed
-- Fixed error caused by undefined `$siteStatuses` variable in single-site instances
-
-## 4.0.0-beta.3 - 2022-04-03
-### Fixed
-- Fixed issues with converting legacy URL rules that contain regex sensitive characters
-
-## 4.0.0-beta.2 - 2022-04-02
-### Added
-- New condition rule type `EntryUriConditionRule` with regex matching operators
-
+## 4.0.0 - 2022-05-05
 ### Changed
+- Refactor code to bring it up to Craft CMS 4 compatibility
 - Rebuild visibility rules functionality with the new condition builder in Craft CMS 4
 - Convert legacy URL visibility rules to use the new `EntryUriConditionRule`
 - Replace GraphQL argument `currentUrl` for `fragments` query with `entryUri`
 
-## 4.0.0-beta.1 - 2022-03-19
-- Refactor code to bring it up to Craft CMS 4 compatibility
+### Fixed
+- Fixed issues with converting legacy URL rules that contain regex sensitive characters
+- Fixed error caused by undefined `$siteStatuses` variable in single-site instances
+- Fixed issue of migrations not running by bumping up `$schemaVersion`
+
+### Added
+- New condition rule type `EntryUriConditionRule` with regex matching operators
+- Added new `FragmentEntryCondition` to avoid rule type clashes with the native `EntryCondition`
+- Added new request condition rule types
+- Added user and request conditions in Visibility Rules condition builder
+- Added GraphQL arguments to `fragments` query for specifying current user and current request props
 
 ## 1.1.2 - 2022-03-19
 - Allow getting the fragment type from fragment by `fragment.type` instead of `fragment.fragmentType`.
