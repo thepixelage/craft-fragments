@@ -211,9 +211,4 @@ class FragmentQuery extends ElementQuery
 
         return parent::beforePrepare();
     }
-
-    protected function isCpOrConsoleRequest()
-    {
-
-    }
 }
