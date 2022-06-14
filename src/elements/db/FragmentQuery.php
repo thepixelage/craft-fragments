@@ -39,11 +39,14 @@ class FragmentQuery extends ElementQuery
      */
     public function all($db = null): ?array
     {
-        $currentUrl = $this->currentUrl ?: Craft::$app->request->getUrl();
+        $currentUrl = null;
 
-        if ((Craft::$app->request->isCpRequest || Craft::$app->request->isConsoleRequest) &&
-            !$this->currentUrl) {
-            $currentUrl = null;
+        if ($this->currentUrl) {
+            $currentUrl = $this->currentUrl;
+        }
+
+        if (!$currentUrl && !(Craft::$app->request->isCpRequest || Craft::$app->request->isConsoleRequest)) {
+            $currentUrl = Craft::$app->request->getUrl();
         }
 
         /** @var Fragment[] $fragments */
