@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 1.1.4 - 2022-06-15
+### Fixed
+- Fixed `$request->getUrl` error in console requests.
+
 ## 1.1.3 - 2022-04-14
 ### Fixed
 - Fixed bug caused when eager loading Fragments field if visibility rule type is set but no URL rules are set (#20). Existing fragments will need to be resaved to rectify this. 
