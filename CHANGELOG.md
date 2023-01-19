@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## 4.0.1 - 2023-01-20
+### Fixed
+- Fixed bug where array instead of `Fragment` model is passed to `matchConditions` ([#24](https://github.com/thepixelage/craft-fragments/issues/24))
+- Fixed bug in GQL `fragments` query where `limit` is applied before matching conditions, causing returned results to exclude fragments that should be matched ([#25](https://github.com/thepixelage/craft-fragments/issues/25))
+
 ## 4.0.0 - 2022-05-05
 ### Changed
 - Refactor code to bring it up to Craft CMS 4 compatibility
