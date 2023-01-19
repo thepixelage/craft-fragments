@@ -23,6 +23,11 @@ class Fragment extends ElementResolver
             return $query;
         }
 
+        if (isset($arguments['limit'])) {
+            $arguments['queryLimit'] = $arguments['limit'];
+            unset($arguments['limit']);
+        }
+
         foreach ($arguments as $key => $value) {
             if (method_exists($query, $key)) {
                 $query->$key($value);

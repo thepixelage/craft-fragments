@@ -30,6 +30,7 @@ class FragmentQuery extends ElementQuery
     public ?string $entryUri = null;
     public ?int $entryId = null;
     public ?int $userId = null;
+    public ?int $queryLimit = null;
     public ?stdClass $requestProps = null;
 
     public function init(): void
@@ -93,7 +94,7 @@ class FragmentQuery extends ElementQuery
             return $fragments;
         }
 
-        return array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser, $currentRequest) {
+        $fragments = array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser, $currentRequest) {
             if (is_array($fragment)) {
                 $model = new Fragment();
                 $model->load($fragment);
@@ -102,6 +103,12 @@ class FragmentQuery extends ElementQuery
 
             return Plugin::getInstance()->fragments->matchConditions($fragment, $currentEntry, $currentUser, $currentRequest);
         });
+
+        if ($this->queryLimit) {
+            return array_slice($fragments, 0, $this->queryLimit);
+        }
+
+        return $fragments;
     }
 
     /**
@@ -161,6 +168,13 @@ class FragmentQuery extends ElementQuery
     public function userId($value): FragmentQuery
     {
         $this->userId = $value;
+
+        return $this;
+    }
+
+    public function queryLimit($value): FragmentQuery
+    {
+        $this->queryLimit = $value;
 
         return $this;
     }
