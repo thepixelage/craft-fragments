@@ -94,6 +94,12 @@ class FragmentQuery extends ElementQuery
         }
 
         return array_filter($fragments, function ($fragment) use ($currentEntry, $currentUser, $currentRequest) {
+            if (is_array($fragment)) {
+                $model = new Fragment();
+                $model->load($fragment);
+                $fragment = $model;
+            }
+
             return Plugin::getInstance()->fragments->matchConditions($fragment, $currentEntry, $currentUser, $currentRequest);
         });
     }
