@@ -41,10 +41,18 @@ class Fragments extends BaseRelationField
 
     public function getContentGqlType(): array|\GraphQL\Type\Definition\Type
     {
+        $args = FragmentArguments::getArguments();
+
+        // Remove irrelevant arguments in the context of the Fragments field
+        unset($args['entryUri']);
+        unset($args['entryId']);
+        unset($args['userId']);
+        unset($args['requestProps']);
+
         return [
             'name' => $this->handle,
             'type' => Type::listOf(FragmentInterface::getType()),
-            'args' => FragmentArguments::getArguments(),
+            'args' => $args,
             'resolve' => FragmentResolver::class . '::resolve',
             'complexity' => GqlHelper::relatedArgumentComplexity(GqlService::GRAPHQL_COMPLEXITY_EAGER_LOAD),
         ];

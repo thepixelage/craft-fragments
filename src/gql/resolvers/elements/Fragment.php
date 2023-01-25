@@ -29,12 +29,7 @@ class Fragment extends ElementResolver
         }
 
         foreach ($arguments as $key => $value) {
-            if (method_exists($query, $key)) {
-                $query->$key($value);
-            } elseif (property_exists($query, $key)) {
-                $query->$key = $value;
-            } else {
-                // Catch custom field queries
+            if (method_exists($query, $key) || property_exists($query, $key)) {
                 $query->$key($value);
             }
         }
