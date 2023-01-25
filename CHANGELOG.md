@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## 4.0.2 - 2023-01-25
+### Fixed
+- Fixed bug where entry query fails when `type` or `zone` arguments are used in Fragments field query
+
+### Removed
+- Removed irrelevant arguments for Fragments field GQL query: `entryUri`, `entryId`, `userId` and `requestProps`
+
 ## 4.0.1 - 2023-01-20
 ### Fixed
 - Fixed bug where array instead of `Fragment` model is passed to `matchConditions` ([#24](https://github.com/thepixelage/craft-fragments/issues/24))
