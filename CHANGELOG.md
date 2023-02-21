@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## 4.0.3 - 2023-02-21
+### Fixed
+- Fixed "Undefined array key" error that appears when edit form is redisplayed after form validation fails.
+
 ## 4.0.2 - 2023-01-25
 ### Fixed
 - Fixed bug where entry query fails when `type` or `zone` arguments are used in Fragments field query

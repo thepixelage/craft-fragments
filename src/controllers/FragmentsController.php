@@ -225,7 +225,10 @@ JS;
         } else {
             $fragment = new Fragment();
             $fragment->settings = [
-                'visibility' => []
+                'visibility' => [
+                    'ruletype' => '',
+                    'rules' => [],
+                ]
             ];
         }
 
