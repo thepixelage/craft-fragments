@@ -6,13 +6,6 @@
     depends: 'craft\\web\\assets\\cp\\CpAsset'
 }) %}
 
-{% set crumbs = [
-    {
-        'label': "Fragments"|t('fragments'),
-        'url': cpUrl('fragments'),
-    }
-] %}
-
 {% block initJs %}
     Craft.fragmentTypes = {{ fragmentTypesJson|raw }};
 

@@ -12,6 +12,18 @@
     }
 ] %}
 
+{% if craft.app.getIsMultiSite() %}
+    {% set crumbs = [{
+        id: 'site-crumb',
+        icon: 'world',
+        label: requestedSite.name|t('site'),
+        menu: {
+            items: siteMenuItems(null, requestedSite),
+            label: 'Select site'|t('site')
+        },
+    }]|merge(crumbs) %}
+{% endif %}
+
 {% if isNew %}
     {% set title = "Create a new fragment"|t('fragments') %}
 {% else %}
@@ -38,13 +50,13 @@
 {% set isDraft = element.getIsDraft() %}
 {% set isRevision = element.getIsRevision() %}
 {% set isCurrent = not isDraft and not isRevision %}
-{% set allSites = craft.app.isMultiSite ? element.getSupportedSites() : [element.siteId] %}
-{% set allEditableSiteIds = craft.app.sites.getEditableSiteIds() %}
-{% set propSiteIds = allSites|filter(s => s.propagate ?? true)|column(s => s.siteId ?? s) %}
-{% set propEditableSiteIds = propSiteIds|intersect(allEditableSiteIds) %}
-{% set isMultiSiteElement = craft.app.isMultiSite and allSites|length > 1 %}
-{% set addlEditableSiteIds = allSites|column(s => s.siteId ?? s)|diff(propSiteIds)|intersect(allEditableSiteIds) %}
-{% set canEditMultipleSites = isMultiSiteElement and (propEditableSiteIds|length > 1 or addlEditableSiteIds|length) %}
+{#{% set allSites = craft.app.isMultiSite ? element.getSupportedSites() : [element.siteId] %}#}
+{#{% set allEditableSiteIds = craft.app.sites.getEditableSiteIds() %}#}
+{#{% set propSiteIds = allSites|filter(s => s.propagate ?? true)|column(s => s.siteId ?? s) %}#}
+{#{% set propEditableSiteIds = propSiteIds|intersect(allEditableSiteIds) %}#}
+{#{% set isMultiSiteElement = craft.app.isMultiSite and allSites|length > 1 %}#}
+{#{% set addlEditableSiteIds = allSites|column(s => s.siteId ?? s)|diff(propSiteIds)|intersect(allEditableSiteIds) %}#}
+{#{% set canEditMultipleSites = isMultiSiteElement and (propEditableSiteIds|length > 1 or addlEditableSiteIds|length) %}#}
 {% set isUnpublishedDraft = element.getIsUnpublishedDraft() %}
 
 {# See if this is a new site that isn’t supported by the source element yet #}
@@ -65,9 +77,9 @@
 {% set canDuplicateSource = canDuplicateSource ?? false %}
 {% set canAddAnother = canAddAnother ?? false %}
 {% set canDeleteSource = canDeleteSource ?? false %}
-{% set canDeleteForSite = (canDeleteForSite ?? false) and deleteForSiteAction and
-    canDeleteForSite and isMultiSiteElement and propSiteIds|length > 1 and
-    ((isCurrent and canDeleteSource) or (isDraft and canDeleteDraft and isNewlySupportedSite)) %}
+{#{% set canDeleteForSite = (canDeleteForSite ?? false) and deleteForSiteAction and#}
+{#    canDeleteForSite and isMultiSiteElement and propSiteIds|length > 1 and#}
+{#    ((isCurrent and canDeleteSource) or (isDraft and canDeleteDraft and isNewlySupportedSite)) %}#}
 {% set canEdit = canEdit ?? (canUpdateSource or canDuplicateSource or canAddAnother or saveDraftAction) %}
 
 {% set redirectUrl = redirectUrl ?? craft.app.config.general.getPostCpLoginRedirect() %}
@@ -212,14 +224,14 @@
 {% endblock %}
 
 {% block contextMenu %}
-    {% if craft.app.getIsMultiSite() %}
-        {% set urlFormat = url("fragments/fragments/#{zone.handle}/#{fragmentType.handle}/#{craft.app.request.getSegment(5)}?site={handle}") %}
-        {% include "_elements/sitemenu.twig" with {
-            siteIds: siteIds,
-            selectedSiteId: element.siteId,
-            urlFormat: urlFormat
-        } only %}
-    {% endif %}
+{#    {% if craft.app.getIsMultiSite() %}#}
+{#        {% set urlFormat = url("fragments/fragments/#{zone.handle}/#{fragmentType.handle}/#{craft.app.request.getSegment(5)}?site={handle}") %}#}
+{#        {% include "_elements/sitemenu.twig" with {#}
+{#            siteIds: siteIds,#}
+{#            selectedSiteId: element.siteId,#}
+{#            urlFormat: urlFormat#}
+{#        } only %}#}
+{#    {% endif %}#}
 {% endblock %}
 
 {% block actionButton %}
