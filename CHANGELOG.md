@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## 5.0.0-beta.1 - 2024-03-11
+- Initial beta release for Craft CMS 5
+
 ## 4.0.3 - 2023-02-21
 ### Fixed
 - Fixed "Undefined array key" error that appears when edit form is redisplayed after form validation fails.
