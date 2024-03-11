@@ -12,7 +12,7 @@ use thepixelage\fragments\conditions\request\UserAgentConditionRule;
 
 class FragmentRequestCondition extends ElementCondition
 {
-    protected function conditionRuleTypes(): array
+    protected function selectableConditionRules(): array
     {
         return [
             ReferrerConditionRule::class,
