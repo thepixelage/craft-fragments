@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## 5.0.0 - 2024-08-22
+- Stable release for Craft CMS 5
+
 ## 5.0.0-beta.1 - 2024-03-11
 - Initial beta release for Craft CMS 5
 
