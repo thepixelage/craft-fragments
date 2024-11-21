@@ -495,13 +495,13 @@ class Fragment extends Element
         ];
     }
 
-    protected function tableAttributeHtml(string $attribute): string
+    protected function attributeHtml(string $attribute): string
     {
         if ($attribute === 'fragmentTypeId') {
             return $this->getFragmentType()->name;
         }
 
-        return parent::tableAttributeHtml($attribute);
+        return parent::attributeHtml($attribute);
     }
 
     public function getEntryCondition(): ElementConditionInterface
