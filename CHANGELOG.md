@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## 5.0.1 - 2024-11-22
+- Fixed bug where entry element search does not take into account site filter
+
 ## 5.0.0 - 2024-08-22
 - Stable release for Craft CMS 5
 
