@@ -61,7 +61,7 @@ class FragmentQuery extends ElementQuery
         }
 
         if ($entryUri) {
-            $element = Entry::find()->uri($entryUri)->one();
+            $element = Entry::find()->site($this->site ?? null)->uri($entryUri)->one();
             if ($element instanceof Entry) {
                 $currentEntry = $element;
             } else {
@@ -143,6 +143,13 @@ class FragmentQuery extends ElementQuery
         if (is_string($value)) {
             $this->zone = $value;
         }
+
+        return $this;
+    }
+
+    public function site($value): static
+    {
+        $this->site = $value;
 
         return $this;
     }
