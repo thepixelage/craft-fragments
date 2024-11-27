@@ -90,8 +90,8 @@ class FragmentsController extends Controller
                 $fragment = Fragment::find()
                     ->id($fragmentId)
                     ->structureId($zone->structureId)
-                    ->site($site)
-                    ->anyStatus()
+                    ->siteId($site->id)
+                    ->status(null)
                     ->one();
 
                 if (!$fragment) {
@@ -210,13 +210,12 @@ JS;
             $site = Craft::$app->getSites()->getCurrentSite();
         }
 
-
         if ($fragmentId) {
             $fragment = Fragment::find()
                 ->id($fragmentId)
                 ->structureId($zone->structureId)
-                ->site($site)
-                ->anyStatus()
+                ->siteId($site->id)
+                ->status(null)
                 ->one();
 
             if (!$fragment) {
