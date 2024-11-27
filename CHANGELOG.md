@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## 5.0.2 - 2024-11-27
+- Fixed bug with using site filter in FragmentQuery
+
 ## 5.0.1 - 2024-11-22
 - Fixed bug where entry element search does not take into account site filter
 
