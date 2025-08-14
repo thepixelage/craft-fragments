@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## 5.0.3 - 2025-08-14
+- Added quote identifiers to preserve mixed-case column names in PostgreSQL (thanks to @denisyilmaz for providing the fix)
+
 ## 5.0.2 - 2024-11-27
 - Fixed bug with using site filter in FragmentQuery
 
