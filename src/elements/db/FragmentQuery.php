@@ -118,7 +118,7 @@ class FragmentQuery extends ElementQuery
     {
         $fragments = $this->all($db);
 
-        return count($fragments) > 0 ? reset($fragments) : null;
+        return $fragments[0] ?? null;
     }
 
     public function type($value): FragmentQuery
@@ -199,34 +199,48 @@ class FragmentQuery extends ElementQuery
         $this->joinElementTable($fragmentsTableName);
 
         $this->query->select([
-            sprintf('%s.uid', $fragmentsTableName),
-            sprintf('%s.zoneId', $fragmentsTableName),
-            sprintf('%s.fragmentTypeId', $fragmentsTableName),
-            sprintf('%s.entryCondition', $fragmentsTableName),
-            sprintf('%s.userCondition', $fragmentsTableName),
-            sprintf('%s.requestCondition', $fragmentsTableName),
+            sprintf('[[%s.uid]]', $fragmentsTableName),
+            sprintf('[[%s.zoneId]]', $fragmentsTableName),
+            sprintf('[[%s.fragmentTypeId]]', $fragmentsTableName),
+            sprintf('[[%s.entryCondition]]', $fragmentsTableName),
+            sprintf('[[%s.userCondition]]', $fragmentsTableName),
+            sprintf('[[%s.requestCondition]]', $fragmentsTableName),
         ]);
 
         if (!empty($this->typeId)) {
-            $this->subQuery->andWhere(Db::parseParam(sprintf('%s.fragmentTypeId', $fragmentsTableName), $this->typeId));
+            $this->subQuery->andWhere(
+                Db::parseParam(sprintf('[[%s.fragmentTypeId]]', $fragmentsTableName), $this->typeId)
+            );
         }
 
         if (!empty($this->type)) {
-            $fragmentTypesTableName = 'fragmenttypes';
+            $fragmentTypesTableName = Craft::$app->db->schema->getRawTableName(Table::FRAGMENTTYPES);
             $this->subQuery
-                ->innerJoin($fragmentTypesTableName, sprintf('%s.id = %s.fragmentTypeId', $fragmentTypesTableName, $fragmentsTableName))
-                ->andWhere(Db::parseParam(sprintf('%s.handle', $fragmentTypesTableName), $this->type));
+                ->innerJoin(
+                    $fragmentTypesTableName,
+                    sprintf('[[%s.id]] = [[%s.fragmentTypeId]]', $fragmentTypesTableName, $fragmentsTableName)
+                )
+                ->andWhere(
+                    Db::parseParam(sprintf('[[%s.handle]]', $fragmentTypesTableName), $this->type)
+                );
         }
 
         if (!empty($this->zoneId)) {
-            $this->subQuery->andWhere(Db::parseParam(sprintf('%s.zoneId', $fragmentsTableName), $this->zoneId));
+            $this->subQuery->andWhere(
+                Db::parseParam(sprintf('[[%s.zoneId]]', $fragmentsTableName), $this->zoneId)
+            );
         }
 
         if (!empty($this->zone)) {
             $zonesTableName = Craft::$app->db->schema->getRawTableName(Table::ZONES);
             $this->subQuery
-                ->innerJoin($zonesTableName, sprintf('%s.id = %s.zoneId', $zonesTableName, $fragmentsTableName))
-                ->andWhere(Db::parseParam(sprintf('%s.handle', $zonesTableName), $this->zone));
+                ->innerJoin(
+                    $zonesTableName,
+                    sprintf('[[%s.id]] = [[%s.zoneId]]', $zonesTableName, $fragmentsTableName)
+                )
+                ->andWhere(
+                    Db::parseParam(sprintf('[[%s.handle]]', $zonesTableName), $this->zone)
+                );
         }
 
         return parent::beforePrepare();
